@@ -143,7 +143,14 @@ export default class SquarePaymentStrategy extends PaymentStrategy {
                         this._cardNonceResponseReceived(nonce, errors);
                     }
                 },
-                methodsSupported: () => {},
+                methodsSupported: (methods: any) => {
+                    const masterpassBtn = document.getElementById('sq-masterpass');
+                    if (masterpassBtn !== null) {
+                        if (methods.masterpass === true) {
+                            masterpassBtn.style.display = 'inline-block';
+                        }
+                    }
+                },
 
                 /*
                  * callback function: createPaymentRequest
