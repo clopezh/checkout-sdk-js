@@ -34,7 +34,7 @@ import {
     GooglePayScriptLoader
 } from './';
 import { GooglePaymentData, GooglePayInitializer, TokenizePayload } from './googlepay';
-import { getGoogleOrderRequestBody, getGooglePaymentDataPayload } from './googlepay.mock';
+import { getGoogleOrderRequestBody, getGooglePaymentDataMock, getGooglePaymentDataPayload } from './googlepay.mock';
 
 describe('GooglePayPaymentStrategy', () => {
     let store: CheckoutStore;
@@ -276,14 +276,7 @@ describe('GooglePayPaymentStrategy', () => {
                 },
             };
 
-            paymentData = {
-                cardInfo: {
-                    billingAddress: {},
-                },
-                paymentMethodToken: {},
-                shippingAddress: {},
-                email: 'email',
-            } as GooglePaymentData;
+            paymentData = getGooglePaymentDataMock();
 
             tokenizePayload = {
                 details: {

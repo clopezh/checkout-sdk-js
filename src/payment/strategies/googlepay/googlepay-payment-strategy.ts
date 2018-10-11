@@ -100,7 +100,7 @@ export default class GooglePayPaymentStrategy extends PaymentStrategy {
                     onPaymentSelect = () => {},
                 } = this._googlePayOptions;
 
-                return this._paymentInstrumentSelected(tokenizePayload, paymentData.cardInfo.billingAddress)
+                return this._paymentInstrumentSelected(tokenizePayload, paymentData.paymentMethodData.info.billingAddress)
                     .then(() => onPaymentSelect())
                     .catch(error => onError(error));
             });

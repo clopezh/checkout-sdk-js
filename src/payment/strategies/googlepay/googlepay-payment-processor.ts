@@ -19,7 +19,7 @@ import {
     GooglePayAddress,
     GooglePayClient,
     GooglePayInitializer,
-    GooglePayPaymentDataRequestV1,
+    GooglePayPaymentDataRequestV2,
     GooglePayScriptLoader,
     GooglePaySDK,
     TokenizePayload
@@ -28,7 +28,7 @@ import {
 export default class GooglePayPaymentProcessor {
     private _googlePaymentsClient!: GooglePayClient;
     private _methodId!: string;
-    private _googlePaymentDataRequest!: GooglePayPaymentDataRequestV1;
+    private _googlePaymentDataRequest!: GooglePayPaymentDataRequestV2;
 
     constructor(
         private _store: CheckoutStore,
@@ -80,7 +80,17 @@ export default class GooglePayPaymentProcessor {
         }
 
         return this._googlePaymentsClient.isReadyToPay({
-            allowedPaymentMethods: this._googlePaymentDataRequest.allowedPaymentMethods,
+            allowedPaymentMethods: [
+                {
+                    type: this._googlePaymentDataRequest.allowedPaymentMethods[0].type,
+                    parameters: {
+                        allowedAuthMethods: this._googlePaymentDataRequest.allowedPaymentMethods[0].parameters.allowedAuthMethods,
+                        allowedCardNetworks: this._googlePaymentDataRequest.allowedPaymentMethods[0].parameters.allowedCardNetworks,
+                    },
+                },
+            ],
+            apiVersion: this._googlePaymentDataRequest.apiVersion,
+            apiVersionMinor: this._googlePaymentDataRequest.apiVersionMinor,
         }).then( response => {
             if (response.result) {
                 return this._googlePaymentsClient.loadPaymentData(this._googlePaymentDataRequest)
@@ -130,6 +140,7 @@ export default class GooglePayPaymentProcessor {
     }
 
     private _getGooglePaymentsClient(google: GooglePaySDK, testMode?: boolean): GooglePayClient {
+        testMode = true;
         if (testMode === undefined) {
             throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
         }
@@ -144,9 +155,9 @@ export default class GooglePayPaymentProcessor {
             id,
             firstName: address.name.split(' ').slice(0, -1).join(' '),
             lastName: address.name.split(' ').slice(-1).join(' '),
-            company: address.companyName,
+            company: '',
             address1: address.address1,
-            address2: address.address2 + address.address3 + address.address4 + address.address5,
+            address2: address.address2 + address.address3,
             city: address.locality,
             stateOrProvince: address.administrativeArea,
             stateOrProvinceCode: address.administrativeArea,
