@@ -12,6 +12,7 @@ import {
 import { toFormUrlEncoded } from '../../../common/http-request/';
 import { RemoteCheckoutSynchronizationError } from '../../../remote-checkout/errors';
 import { ConsignmentActionCreator } from '../../../shipping';
+import PaymentMethodInvalidError from '../../errors/payment-method-invalid-error';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 
 import {
@@ -128,10 +129,10 @@ export default class GooglePayPaymentProcessor {
                         apiVersionMinor: paymentDataRequest.apiVersionMinor,
                     }).then(response => {
                         if (response.result) {
-                            Promise.resolve();
+                            return;
                         }
 
-                        Promise.reject();
+                        throw new PaymentMethodInvalidError();
                     });
                 });
             });
