@@ -2505,18 +2505,6 @@ declare interface GooglePayBraintreeButtonInitializeOptions {
      *  short: Google Pay payment button without the "Buy with" text.
      */
     buttonType?: ButtonType;
-    /**
-     * A callback that gets called if unable to authorize and tokenize payment.
-     *
-     * @param error - The error object describing the failure.
-     */
-    onAuthorizeError?(error: BraintreeError | StandardError): void;
-    /**
-     * A callback that gets called if unable to submit payment.
-     *
-     * @param error - The error object describing the failure.
-     */
-    onPaymentError?(error: BraintreeError | StandardError): void;
 }
 
 declare interface GooglePayCustomerInitializeOptions {
