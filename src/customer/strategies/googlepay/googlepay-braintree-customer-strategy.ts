@@ -34,12 +34,7 @@ export default class GooglePayBraintreeCustomerStrategy extends CustomerStrategy
 
         return this._googlePayPaymentProcessor.initialize(methodId)
             .then(() => {
-                const walletButton = this._createSignInButton(googlepaybraintree.container);
-
-                if (walletButton) {
-                    this._walletButton = walletButton;
-                    this._walletButton.addEventListener('click', this._handleWalletButtonClick);
-                }
+                this._walletButton = this._createSignInButton(googlepaybraintree.container);
             })
             .then(() => super.initialize(options));
     }
@@ -51,7 +46,6 @@ export default class GooglePayBraintreeCustomerStrategy extends CustomerStrategy
 
         if (this._walletButton && this._walletButton.parentNode) {
             this._walletButton.parentNode.removeChild(this._walletButton);
-            this._walletButton.removeEventListener('click', this._handleWalletButtonClick);
             this._walletButton = undefined;
         }
 
@@ -85,7 +79,7 @@ export default class GooglePayBraintreeCustomerStrategy extends CustomerStrategy
             throw new InvalidArgumentError('Unable to create sign-in button without valid container ID.');
         }
 
-        const button = this._googlePayPaymentProcessor.createButton(() => {});
+        const button = this._googlePayPaymentProcessor.createButton(this._handleWalletButtonClick);
 
         container.appendChild(button);
 
@@ -113,7 +107,7 @@ export default class GooglePayBraintreeCustomerStrategy extends CustomerStrategy
 
         return this._googlePayPaymentProcessor.displayWallet()
             .then(paymentData => this._googlePayPaymentProcessor.handleSuccess(paymentData)
-                .then(() => this._googlePayPaymentProcessor.updateShippingAddress(paymentData.shippingAddress)))
+            .then(() => this._googlePayPaymentProcessor.updateShippingAddress(paymentData.shippingAddress)))
             .then(() => this._onPaymentSelectComplete())
             .catch(error => this._onError(error));
     }

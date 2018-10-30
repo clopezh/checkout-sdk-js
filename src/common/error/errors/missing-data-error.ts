@@ -26,7 +26,7 @@ export default class MissingDataError extends StandardError {
 function getErrorMessage(type: MissingDataErrorType): string {
     switch (type) {
     case MissingDataErrorType.MissingBillingAddress:
-    return 'Unable to proceed because billing address data is unavailable.';
+        return 'Unable to proceed because billing address data is unavailable.';
 
     case MissingDataErrorType.MissingCart:
         return 'Unable to proceed because cart data is unavailable.';

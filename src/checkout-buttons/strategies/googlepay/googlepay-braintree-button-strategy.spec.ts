@@ -79,10 +79,6 @@ describe('GooglePayBraintreeCheckoutButtonStrategy', () => {
         jest.spyOn(paymentProcessor, 'createButton')
             .mockReturnValue(walletButton);
 
-        jest.spyOn(walletButton, 'addEventListener');
-
-        jest.spyOn(walletButton, 'removeEventListener');
-
         jest.spyOn(paymentProcessor, 'deinitialize');
 
         container.appendChild(walletButton);
@@ -101,12 +97,12 @@ describe('GooglePayBraintreeCheckoutButtonStrategy', () => {
 
         describe('Payment method exist', () => {
 
-            it('adds the event listener to the wallet button', async () => {
+            it('Creates the button', async () => {
                 checkoutButtonOptions = getCheckoutButtonOptions();
 
                 await strategy.initialize(checkoutButtonOptions);
 
-                expect(walletButton.addEventListener).toHaveBeenCalled();
+                expect(paymentProcessor.createButton).toHaveBeenCalled();
             });
 
             it('Validates if strategy is been initialized', async () => {
@@ -210,9 +206,9 @@ describe('GooglePayBraintreeCheckoutButtonStrategy', () => {
         });
 
         it('handles wallet button event', async () => {
-            spyOn(paymentProcessor, 'displayWallet').and.returnValue(Promise.resolve(paymentData));
-            spyOn(paymentProcessor, 'handleSuccess').and.returnValue(Promise.resolve());
-            spyOn(paymentProcessor, 'updateShippingAddress').and.returnValue(Promise.resolve());
+            jest.spyOn(paymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(paymentData));
+            jest.spyOn(paymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentProcessor, 'updateShippingAddress').mockReturnValue(Promise.resolve());
 
             await strategy.initialize(googlePayOptions).then(() => {
                 walletButton.click();

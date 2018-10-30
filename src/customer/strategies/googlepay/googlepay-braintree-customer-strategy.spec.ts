@@ -77,10 +77,6 @@ describe('GooglePayBraintreeCustomerStrategy', () => {
         jest.spyOn(paymentProcessor, 'createButton')
             .mockReturnValue(walletButton);
 
-        jest.spyOn(walletButton, 'addEventListener');
-
-        jest.spyOn(walletButton, 'removeEventListener');
-
         container.appendChild(walletButton);
         document.body.appendChild(container);
     });
@@ -97,12 +93,12 @@ describe('GooglePayBraintreeCustomerStrategy', () => {
 
         describe('Payment method exist', () => {
 
-            it('adds the event listener to the wallet button', async () => {
+            it('Creates the button', async () => {
                 customerInitializeOptions = getCustomerInitializeOptions();
 
                 await strategy.initialize(customerInitializeOptions);
 
-                expect(walletButton.addEventListener).toHaveBeenCalled();
+                expect(paymentProcessor.createButton).toHaveBeenCalled();
             });
 
             it('Validates if strategy is been initialized', async () => {
@@ -257,16 +253,14 @@ describe('GooglePayBraintreeCustomerStrategy', () => {
                 methodId: 'googlepaybraintre',
                 googlepaybraintree: {
                     container: 'googlePayCheckoutButton',
-                    onError: () => {},
-                    onPaymentSelect: () => {},
                 },
             };
         });
 
         it('handles wallet button event', async () => {
-            spyOn(paymentProcessor, 'displayWallet').and.returnValue(Promise.resolve(getGooglePaymentDataMock()));
-            spyOn(paymentProcessor, 'handleSuccess').and.returnValue(Promise.resolve());
-            spyOn(paymentProcessor, 'updateShippingAddress').and.returnValue(Promise.resolve());
+            jest.spyOn(paymentProcessor, 'displayWallet').mockReturnValue(Promise.resolve(getGooglePaymentDataMock()));
+            jest.spyOn(paymentProcessor, 'handleSuccess').mockReturnValue(Promise.resolve());
+            jest.spyOn(paymentProcessor, 'updateShippingAddress').mockReturnValue(Promise.resolve());
 
             await strategy.initialize(googlePayOptions).then(() => {
                 walletButton.click();

@@ -37,10 +37,6 @@ export default class GooglePayBraintreeButtonStrategy extends CheckoutButtonStra
             .then(() => this._googlePayPaymentProcessor.initialize(this._getMethodId())
                 .then(() => {
                     this._walletButton = this._createSignInButton(containerId);
-
-                    if (this._walletButton) {
-                        this._walletButton.addEventListener('click', this._handleWalletButtonClick);
-                    }
                 })
             ).then(() => super.initialize(options));
     }
@@ -52,7 +48,6 @@ export default class GooglePayBraintreeButtonStrategy extends CheckoutButtonStra
 
         if (this._walletButton && this._walletButton.parentNode) {
             this._walletButton.parentNode.removeChild(this._walletButton);
-            this._walletButton.removeEventListener('click', this._handleWalletButtonClick);
             this._walletButton = undefined;
         }
 
@@ -67,7 +62,7 @@ export default class GooglePayBraintreeButtonStrategy extends CheckoutButtonStra
             throw new InvalidArgumentError('Unable to create sign-in button without valid container ID.');
         }
 
-        const googlePayButton = this._googlePayPaymentProcessor.createButton(() => {});
+        const googlePayButton = this._googlePayPaymentProcessor.createButton(this._handleWalletButtonClick);
 
         container.appendChild(googlePayButton);
 
@@ -88,7 +83,7 @@ export default class GooglePayBraintreeButtonStrategy extends CheckoutButtonStra
 
         return this._googlePayPaymentProcessor.displayWallet()
             .then(paymentData => this._googlePayPaymentProcessor.handleSuccess(paymentData)
-                .then(() => this._googlePayPaymentProcessor.updateShippingAddress(paymentData.shippingAddress)))
+            .then(() => this._googlePayPaymentProcessor.updateShippingAddress(paymentData.shippingAddress)))
             .then(() => this._onPaymentSelectComplete())
             .catch(error => this._onError(error));
     }

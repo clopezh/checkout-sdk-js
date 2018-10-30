@@ -243,7 +243,8 @@ export default function createPaymentStrategyRegistry(
             paymentStrategyActionCreator,
             requestSender,
             new ChasePayScriptLoader(scriptLoader),
-            new WepayRiskClient(scriptLoader))
+            new WepayRiskClient(scriptLoader)
+        )
     );
 
     registry.register('googlepaybraintree', () =>
