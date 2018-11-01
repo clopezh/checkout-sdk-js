@@ -9,6 +9,8 @@ import CustomerCredentials from '../../customer-credentials';
 import { CustomerInitializeOptions, CustomerRequestOptions } from '../../customer-request-options';
 import CustomerStrategy from '../customer-strategy';
 
+import GooglePayCustomerInitializeOptions from './googlepay-customer-initialize-options';
+
 export default class GooglePayCustomerStrategy extends CustomerStrategy {
     private _walletButton?: HTMLElement;
 
@@ -28,11 +30,7 @@ export default class GooglePayCustomerStrategy extends CustomerStrategy {
 
         const { methodId }  = options;
 
-        const googlePayOptions = (
-            options.methodId === 'googlepaybraintree' ? options.googlepaybraintree :
-            options.methodId === 'googlepaystripe' ? options.googlepaystripe :
-            undefined
-        );
+        const googlePayOptions = this._getGooglePayOptions(options);
 
         if (!googlePayOptions || !methodId) {
             throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
@@ -90,6 +88,18 @@ export default class GooglePayCustomerStrategy extends CustomerStrategy {
         container.appendChild(button);
 
         return button;
+    }
+
+    private _getGooglePayOptions(options: CustomerInitializeOptions): GooglePayCustomerInitializeOptions {
+        if (options.methodId === 'googlepaybraintree' && options.googlepaybraintree) {
+            return options.googlepaybraintree;
+        }
+
+        if (options.methodId === 'googlepaystripe' && options.googlepaystripe) {
+            return options.googlepaystripe;
+        }
+
+        throw new InvalidArgumentError();
     }
 
     private _onPaymentSelectComplete(): void {
