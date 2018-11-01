@@ -26,6 +26,12 @@ export interface CheckoutButtonInitializeOptions extends CheckoutButtonOptions {
     braintreepaypalcredit?: BraintreePaypalButtonInitializeOptions;
 
     /**
+     * The options that are required to facilitate PayPal. They can be omitted
+     * unless you need to support Paypal.
+     */
+    paypal?: PaypalButtonInitializeOptions;
+
+    /**
      * The ID of a container which the checkout button should be inserted.
      */
     containerId: string;

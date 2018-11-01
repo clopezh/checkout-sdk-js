@@ -87,5 +87,13 @@ export default function createCheckoutButtonRegistry(
         )
     );
 
+    registry.register(CheckoutButtonMethodType.PAYPALEXPRESS, () =>
+        new PaypalButtonStrategy(
+            store,
+            new PaypalScriptLoader(scriptLoader),
+            createFormPoster()
+        )
+    );
+
     return registry;
 }

@@ -4,5 +4,5 @@ export enum CheckoutButtonMethodType {
     GOOGLEPAY_BRAINTREE = 'googlepaybraintree',
     GOOGLEPAY_STRIPE = 'googlepaystripe',
     MASTERPASS = 'masterpass',
-
+    PAYPALEXPRESS = 'paypalexpress',
 }
