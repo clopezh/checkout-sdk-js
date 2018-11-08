@@ -2387,7 +2387,8 @@ declare enum EmbeddedCheckoutEventType {
     CheckoutError = "CHECKOUT_ERROR",
     CheckoutLoaded = "CHECKOUT_LOADED",
     FrameError = "FRAME_ERROR",
-    FrameLoaded = "FRAME_LOADED"
+    FrameLoaded = "FRAME_LOADED",
+    SignedOut = "SIGNED_OUT"
 }
 
 declare interface EmbeddedCheckoutFrameErrorEvent {
@@ -2409,6 +2410,7 @@ declare interface EmbeddedCheckoutMessenger {
     postFrameError(payload: Error | CustomError): void;
     postFrameLoaded(): void;
     postLoaded(): void;
+    postSignedOut(): void;
     receiveStyles(handler: (styles: EmbeddedCheckoutStyles) => void): void;
 }
 
@@ -2426,6 +2428,11 @@ declare interface EmbeddedCheckoutOptions {
     onFrameError?(event: EmbeddedCheckoutFrameErrorEvent): void;
     onFrameLoad?(event: EmbeddedCheckoutFrameLoadedEvent): void;
     onLoad?(event: EmbeddedCheckoutLoadedEvent): void;
+    onSignOut?(event: EmbeddedCheckoutSignedOutEvent): void;
+}
+
+declare interface EmbeddedCheckoutSignedOutEvent {
+    type: EmbeddedCheckoutEventType.SignedOut;
 }
 
 declare interface EmbeddedCheckoutStyles {
