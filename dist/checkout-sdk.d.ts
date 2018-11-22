@@ -2387,7 +2387,8 @@ declare enum EmbeddedCheckoutEventType {
     CheckoutError = "CHECKOUT_ERROR",
     CheckoutLoaded = "CHECKOUT_LOADED",
     FrameError = "FRAME_ERROR",
-    FrameLoaded = "FRAME_LOADED"
+    FrameLoaded = "FRAME_LOADED",
+    SignedOut = "SIGNED_OUT"
 }
 
 declare interface EmbeddedCheckoutFrameErrorEvent {
@@ -2397,6 +2398,7 @@ declare interface EmbeddedCheckoutFrameErrorEvent {
 
 declare interface EmbeddedCheckoutFrameLoadedEvent {
     type: EmbeddedCheckoutEventType.FrameLoaded;
+    payload?: EmbeddedContentOptions;
 }
 
 declare interface EmbeddedCheckoutLoadedEvent {
@@ -2407,8 +2409,9 @@ declare interface EmbeddedCheckoutMessenger {
     postComplete(): void;
     postError(payload: Error | CustomError): void;
     postFrameError(payload: Error | CustomError): void;
-    postFrameLoaded(): void;
+    postFrameLoaded(payload?: EmbeddedContentOptions): void;
     postLoaded(): void;
+    postSignedOut(): void;
     receiveStyles(handler: (styles: EmbeddedCheckoutStyles) => void): void;
 }
 
@@ -2426,6 +2429,11 @@ declare interface EmbeddedCheckoutOptions {
     onFrameError?(event: EmbeddedCheckoutFrameErrorEvent): void;
     onFrameLoad?(event: EmbeddedCheckoutFrameLoadedEvent): void;
     onLoad?(event: EmbeddedCheckoutLoadedEvent): void;
+    onSignOut?(event: EmbeddedCheckoutSignedOutEvent): void;
+}
+
+declare interface EmbeddedCheckoutSignedOutEvent {
+    type: EmbeddedCheckoutEventType.SignedOut;
 }
 
 declare interface EmbeddedCheckoutStyles {
@@ -2448,6 +2456,10 @@ declare interface EmbeddedCheckoutStyles {
     loadingIndicator?: LoadingIndicatorStyles;
     orderSummary?: BlockElementStyles;
     step?: StepStyles;
+}
+
+declare interface EmbeddedContentOptions {
+    contentId?: string;
 }
 
 declare interface FormField {
@@ -2592,6 +2604,7 @@ declare interface InputStyles extends BlockElementStyles {
 
 declare interface Instrument {
     bigpayToken: string;
+    defaultInstrument: boolean;
     provider: string;
     iin: string;
     last4: string;
@@ -2901,6 +2914,11 @@ declare interface PaymentInitializeOptions extends PaymentRequestOptions {
      */
     masterpass?: MasterpassPaymentInitializeOptions;
     /**
+     * The options that are required to initialize the PayPal Express payment method.
+     * They can be omitted unless you need to support PayPal Express.
+     */
+    paypalexpress?: PaypalExpressPaymentInitializeOptions;
+    /**
      * The options that are required to initialize the Square payment method.
      * They can be omitted unless you need to support Square.
      */
@@ -3006,6 +3024,10 @@ declare interface PaypalButtonStyleOptions {
     shape?: 'pill' | 'rect';
     tagline?: boolean;
     fundingicons?: boolean;
+}
+
+declare interface PaypalExpressPaymentInitializeOptions {
+    useRedirectFlow?: boolean;
 }
 
 declare interface PhysicalItem extends LineItem {

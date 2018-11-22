@@ -55,6 +55,9 @@ export default class MasterpassCustomerStrategy extends CustomerStrategy {
                     currency: cart.currency.code,
                     cartId: cart.id,
                     suppressShippingAddress: false,
+                    callbackUrl: window.location.href +
+                    '??action=set_external_checkout&provider=masterpass&gateway=stripe&from=' +
+                    window.location.pathname,
                 };
 
                 return this._masterpassScriptLoader.load(this._paymentMethod.config.testMode)

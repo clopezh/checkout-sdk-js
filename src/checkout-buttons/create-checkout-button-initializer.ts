@@ -37,7 +37,7 @@ export default function createCheckoutButtonInitializer(
     const host = options && options.host;
     const store = createCheckoutStore();
     const requestSender = createRequestSender({ host });
-    const formPoster = createFormPoster({ host });
+    const formPoster = createFormPoster();
 
     return new CheckoutButtonInitializer(
         store,
