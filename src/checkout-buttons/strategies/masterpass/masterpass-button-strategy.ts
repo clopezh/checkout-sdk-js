@@ -108,6 +108,8 @@ export default class MasterpassButtonStrategy extends CheckoutButtonStrategy {
             currency: checkout.cart.currency.code,
             cartId: checkout.cart.id,
             suppressShippingAddress: false,
+            callbackUrl: window.location.origin +
+                '/checkout.php?action=set_external_checkout&provider=masterpass&gateway=stripe&origin=cart',
         };
     }
 

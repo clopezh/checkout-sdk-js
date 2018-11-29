@@ -120,6 +120,8 @@ export default class MasterpassPaymentStrategy extends PaymentStrategy {
             currency: storeConfig.currency.code,
             cartId: checkout.cart.id,
             suppressShippingAddress: false,
+            callbackUrl: window.location.origin +
+                '/checkout.php?action=set_external_checkout&provider=masterpass&gateway=stripe&origin=checkout',
         };
     }
 

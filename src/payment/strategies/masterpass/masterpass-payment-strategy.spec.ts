@@ -122,6 +122,8 @@ describe('MasterpassPaymentStragegy', () => {
                     checkoutId: 'checkout-id',
                     currency: 'USD',
                     suppressShippingAddress: false,
+                    callbackUrl: window.location.origin +
+                        '/checkout.php?action=set_external_checkout&provider=masterpass&gateway=stripe&origin=checkout',
                 };
 
                 walletButton = document.createElement('a');
