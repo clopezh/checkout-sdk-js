@@ -52,7 +52,7 @@ export default class GooglePayButtonStrategy implements CheckoutButtonStrategy {
 
         const googlePayButton = this._googlePayPaymentProcessor.createButton(this._handleWalletButtonClick);
 
-        container.appendChild(googlePayButton);
+        // container.appendChild(googlePayButton);
 
         return googlePayButton;
     }

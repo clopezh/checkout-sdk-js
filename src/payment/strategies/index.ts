@@ -26,3 +26,4 @@ export { ChasePayPaymentStrategy, ChasePayInitializeOptions } from './chasepay';
 export { SquarePaymentStrategy, SquarePaymentInitializeOptions } from './square';
 export { MasterpassPaymentStrategy, MasterpassPaymentInitializeOptions } from './masterpass';
 export { WepayPaymentStrategy } from './wepay';
+export { CybersourcePaymentStrategy } from './cybersource';

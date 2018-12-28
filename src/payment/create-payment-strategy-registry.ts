@@ -49,6 +49,7 @@ import { MasterpassPaymentStrategy, MasterpassScriptLoader } from './strategies/
 import { PaypalScriptLoader } from './strategies/paypal';
 import { SquareScriptLoader } from './strategies/square';
 import { WepayRiskClient } from './strategies/wepay';
+import CybersourcePaymentStrategy from './strategies/cybersource/cybersource-payment-strategy';
 
 export default function createPaymentStrategyRegistry(
     store: CheckoutStore,
@@ -303,6 +304,14 @@ export default function createPaymentStrategyRegistry(
                 store,
                 new GooglePayStripeInitializer()
             )
+        )
+    );
+
+    registry.register('cybersource', () =>
+        new CybersourcePaymentStrategy(
+            store,
+            orderActionCreator,
+            paymentActionCreator
         )
     );
 
