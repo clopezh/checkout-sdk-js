@@ -45,6 +45,9 @@ import { PaypalExpressPaymentStrategy, PaypalProPaymentStrategy, PaypalScriptLoa
 import { SagePayPaymentStrategy } from './strategies/sage-pay';
 import { SquarePaymentStrategy, SquareScriptLoader } from './strategies/square';
 import { WepayPaymentStrategy, WepayRiskClient } from './strategies/wepay';
+import StripePaymentStrategy from './strategies/stripe/stripe-payment-strategy';
+import {StripeScriptLoader} from './strategies/stripe';
+import createThreeDSecureProcessor from './strategies/3dsecure/create-threedsecure-processor';
 
 export default function createPaymentStrategyRegistry(
     store: CheckoutStore,
@@ -288,6 +291,18 @@ export default function createPaymentStrategyRegistry(
                 store,
                 new GooglePayStripeInitializer()
             )
+        )
+    );
+
+    registry.register(PaymentStrategyType.STRIPE, () =>
+        new StripePaymentStrategy(
+            store,
+            checkoutActionCreator,
+            paymentMethodActionCreator,
+            paymentStrategyActionCreator,
+            paymentActionCreator,
+            orderActionCreator,
+            createThreeDSecureProcessor()
         )
     );
 

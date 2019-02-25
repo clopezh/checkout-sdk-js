@@ -11,6 +11,7 @@ enum PaymentStrategyType {
     PAYPAL_EXPRESS_CREDIT = 'paypalexpresscredit',
     SAGE_PAY = 'sagepay',
     SQUARE = 'squarev2',
+    STRIPE = 'stripe',
     NO_PAYMENT_DATA_REQUIRED = 'nopaymentdatarequired',
     BRAINTREE = 'braintree',
     BRAINTREE_PAYPAL = 'braintreepaypal',
