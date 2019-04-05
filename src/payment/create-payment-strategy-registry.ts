@@ -44,10 +44,9 @@ import { OffsitePaymentStrategy } from './strategies/offsite';
 import { PaypalExpressPaymentStrategy, PaypalProPaymentStrategy, PaypalScriptLoader } from './strategies/paypal';
 import { SagePayPaymentStrategy } from './strategies/sage-pay';
 import { SquarePaymentStrategy, SquareScriptLoader } from './strategies/square';
-import { WepayPaymentStrategy, WepayRiskClient } from './strategies/wepay';
+import { StripeScriptLoader } from './strategies/stripe';
 import StripePaymentStrategy from './strategies/stripe/stripe-payment-strategy';
-import {StripeScriptLoader} from './strategies/stripe';
-import createThreeDSecureProcessor from './strategies/3dsecure/create-threedsecure-processor';
+import { WepayPaymentStrategy, WepayRiskClient } from './strategies/wepay';
 
 export default function createPaymentStrategyRegistry(
     store: CheckoutStore,
@@ -302,7 +301,7 @@ export default function createPaymentStrategyRegistry(
             paymentStrategyActionCreator,
             paymentActionCreator,
             orderActionCreator,
-            createThreeDSecureProcessor()
+            new StripeScriptLoader(getScriptLoader())
         )
     );
 
