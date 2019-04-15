@@ -58,21 +58,7 @@ export default class StripePaymentStrategy implements PaymentStrategy {
                 });
                 this.cardElement.mount('#stripe-card-element');
 
-                // this.ccNumber = elements.create('cardNumber', {
-                //     placeholder: '',
-                // });
-                // this.ccNumber.mount('#ccNumber');
-                //
-                // this.ccExpiry = elements.create('cardExpiry');
-                // this.ccExpiry.mount('#ccExpiry');
-                //
-                // this.ccCvv = elements.create('cardCvc', {
-                //     placeholder: '',
-                // });
-                // this.ccCvv.mount('#ccCvv');
-                // TODO: Create card with Stripe JS and handlePayment()
-
-                return Promise.resolve(this._store.getState());
+                return Promise.resolve(this.cardElement);
             });
     }
 
@@ -97,25 +83,21 @@ export default class StripePaymentStrategy implements PaymentStrategy {
                 }
 
                 return this.stripeJs.handleCardPayment(
-                    paymentMethod.clientToken, this.cardElement, {
-                        source_data: {
-                            owner: { name: 'Carlos L' },
-                        },
-                    }
+                    paymentMethod.clientToken, this.cardElement, {}
                 ).then((stripeResponse: any) => {
                     if (stripeResponse.error) {
-                        console.log(stripeResponse);
+                        throw new MissingDataError(MissingDataErrorType.MissingCheckout);
                     } else {
-                        console.log('Success', stripeResponse);
-                        // TODO: Remove this and finalize after stripe
-
                         const paymentPayload = {
                             methodId: payment.methodId,
                             paymentData: { nonce: stripeResponse.paymentIntent.id },
                         };
 
                         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
-                            .then(() => this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload)));
+                            .then(() => this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload))
+                                .catch(error => {
+                                    throw new StandardError(error);
+                                }));
                     }
                 });
             })
