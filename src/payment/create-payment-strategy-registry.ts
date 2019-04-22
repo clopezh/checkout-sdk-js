@@ -29,6 +29,7 @@ import {
     VisaCheckoutScriptLoader
 } from './strategies/braintree';
 import { ChasePayPaymentStrategy, ChasePayScriptLoader } from './strategies/chasepay';
+import { ConvergePaymentStrategy } from './strategies/converge';
 import { CreditCardPaymentStrategy } from './strategies/credit-card';
 import {
     createGooglePayPaymentProcessor,
@@ -311,6 +312,14 @@ export default function createPaymentStrategyRegistry(
             new ZipScriptLoader(scriptLoader)
         )
     );
+
+    registry.register(PaymentStrategyType.CONVERGE, () =>
+    new ConvergePaymentStrategy(
+        store,
+        orderActionCreator,
+        paymentActionCreator
+    )
+);
 
     return registry;
 }

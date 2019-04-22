@@ -2,6 +2,7 @@ enum PaymentStrategyType {
     AFFIRM = 'affirm',
     AFTERPAY = 'afterpay',
     AMAZON = 'amazon',
+    CONVERGE = 'converge',
     CREDIT_CARD = 'creditcard',
     KLARNA = 'klarna',
     LEGACY = 'legacy',
