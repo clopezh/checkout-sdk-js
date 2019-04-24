@@ -17,27 +17,19 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
 
     execute(payload: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
         const { payment, ...order } = payload;
-        const orderPayload = this._shouldSubmitFullPayload(payment) ? payload : order;
+        const paymentData = payment && payment.paymentData;
 
-        if (!payment) {
-            throw new PaymentArgumentInvalidError(['payment']);
+        if (!payment || !paymentData) {
+            throw new PaymentArgumentInvalidError(['payment.paymentData']);
         }
 
-        return this._store.dispatch(this._orderActionCreator.submitOrder(orderPayload, options))
+        return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() =>
-                this._store.dispatch(this._paymentActionCreator.initializeOffsitePayment(payment.methodId, payment.gatewayId))
+                this._store.dispatch(this._paymentActionCreator.submitPayment({ ...payment, paymentData }))
             );
     }
 
     finalize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
-        const state = this._store.getState();
-        const order = state.order.getOrder();
-        const status = state.payment.getPaymentStatus();
-
-        if (order && (status === paymentStatusTypes.ACKNOWLEDGE || status === paymentStatusTypes.FINALIZE)) {
-            return this._store.dispatch(this._orderActionCreator.finalizeOrder(order.orderId, options));
-        }
-
         return Promise.reject(new OrderFinalizationNotRequiredError());
     }
 
@@ -47,15 +39,5 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
 
     deinitialize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
         return Promise.resolve(this._store.getState());
-    }
-
-    private _shouldSubmitFullPayload(payment?: OrderPaymentRequestBody): boolean {
-        // FIXME: A temporary workaround to support offsite payment methods
-        // where their return URL needs to be provided by the core app.
-        if (!payment) {
-            return false;
-        }
-
-        return payment.gatewayId === 'adyen' || payment.methodId === 'ccavenuemars';
     }
 }
