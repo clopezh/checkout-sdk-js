@@ -12,6 +12,10 @@ export enum PaymentActionType {
     InitializeOffsitePaymentRequested = 'INITIALIZE_OFFSITE_PAYMENT_REQUESTED',
     InitializeOffsitePaymentSucceeded = 'INITIALIZE_OFFSITE_PAYMENT_SUCCEEDED',
     InitializeOffsitePaymentFailed = 'INITIALIZE_OFFSITE_PAYMENT_FAILED',
+
+    AuthenticateThreeDSRequested = 'AUTHENTICATE_3DS_REQUESTED',
+    AuthenticateThreeDSSucceeded = 'AUTHENTICATE_3DS_SUCCEEDED',
+    AuthenticateThreeDSFailed = 'AUTHENTICATE_3DS_FAILED',
 }
 
 export type PaymentAction = SubmitPaymentAction |
@@ -27,6 +31,11 @@ export type InitializeOffsitePaymentAction =
     InitializeOffsitePaymentRequestedAction |
     InitializeOffsitePaymentSucceededAction |
     InitializeOffsitePaymentFailedAction;
+
+export type AuthenticateThreeDSAction =
+    AuthenticateThreeDSRequestedAction |
+    AuthenticateThreeDSSucceededAction |
+    AuthenticateThreeDSFailedAction;
 
 export interface SubmitPaymentRequestedAction extends Action {
     type: PaymentActionType.SubmitPaymentRequested;
@@ -50,4 +59,16 @@ export interface InitializeOffsitePaymentSucceededAction extends Action {
 
 export interface InitializeOffsitePaymentFailedAction extends Action<Error> {
     type: PaymentActionType.InitializeOffsitePaymentFailed;
+}
+
+export interface AuthenticateThreeDSRequestedAction extends Action {
+    type: PaymentActionType.AuthenticateThreeDSRequested;
+}
+
+export interface AuthenticateThreeDSSucceededAction extends Action {
+    type: PaymentActionType.AuthenticateThreeDSSucceeded;
+}
+
+export interface AuthenticateThreeDSFailedAction extends Action<Error> {
+    type: PaymentActionType.AuthenticateThreeDSFailed;
 }

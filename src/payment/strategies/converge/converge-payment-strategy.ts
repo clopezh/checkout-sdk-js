@@ -1,10 +1,9 @@
 import { CheckoutStore, InternalCheckoutSelectors } from '../../../checkout';
-import { OrderActionCreator, OrderPaymentRequestBody, OrderRequestBody } from '../../../order';
+import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
-import * as paymentStatusTypes from '../../payment-status-types';
 
 import PaymentStrategy from '../payment-strategy';
 
@@ -22,6 +21,8 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
         if (!payment || !paymentData) {
             throw new PaymentArgumentInvalidError(['payment.paymentData']);
         }
+
+        this._store.dispatch(this._paymentActionCreator.authenticateThreeDS(payment.methodId, payment.gatewayId));
 
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() =>

@@ -14,7 +14,12 @@ import { mapToInternalShippingOption } from '../shipping';
 
 import isVaultedInstrument from './is-vaulted-instrument';
 import Payment from './payment';
-import { InitializeOffsitePaymentAction, PaymentActionType, SubmitPaymentAction } from './payment-actions';
+import {
+    AuthenticateThreeDSAction,
+    InitializeOffsitePaymentAction,
+    PaymentActionType,
+    SubmitPaymentAction,
+} from './payment-actions';
 import PaymentMethod from './payment-method';
 import PaymentMethodSelector from './payment-method-selector';
 import PaymentRequestBody from './payment-request-body';
@@ -56,6 +61,23 @@ export default class PaymentActionCreator {
                     .then(() => createAction(PaymentActionType.InitializeOffsitePaymentSucceeded))
             ).pipe(
                 catchError(error => throwErrorAction(PaymentActionType.InitializeOffsitePaymentFailed, error))
+            );
+        };
+    }
+
+    authenticateThreeDS(
+        methodId: string,
+        gatewayId?: string
+    ): ThunkAction<AuthenticateThreeDSAction, InternalCheckoutSelectors> {
+        return store => {
+            const payload = this._getPaymentRequestBody({ gatewayId, methodId }, store.getState());
+
+            return concat(
+                of(createAction(PaymentActionType.AuthenticateThreeDSRequested)),
+                this._paymentRequestSender.authenticateThreeDS(payload)
+                    .then(() => createAction(PaymentActionType.AuthenticateThreeDSSucceeded))
+            ).pipe(
+                catchError(error => throwErrorAction(PaymentActionType.AuthenticateThreeDSFailed, error))
             );
         };
     }

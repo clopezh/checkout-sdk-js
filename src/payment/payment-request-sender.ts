@@ -32,6 +32,12 @@ export default class PaymentRequestSender {
         });
     }
 
+    authenticateThreeDS(payload: PaymentRequestBody): Promise<void> {
+        return new Promise(() => {
+            this._client.authenticateThreeDS(payload);
+        });
+    }
+
     private _transformResponse(response: any): Response {
         return {
             headers: {},
