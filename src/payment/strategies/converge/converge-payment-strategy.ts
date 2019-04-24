@@ -22,11 +22,9 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
             throw new PaymentArgumentInvalidError(['payment.paymentData']);
         }
 
-        this._store.dispatch(this._paymentActionCreator.authenticateThreeDS(payment.methodId, payment.gatewayId));
-
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() =>
-                this._store.dispatch(this._paymentActionCreator.submitPayment({ ...payment, paymentData }))
+                this._store.dispatch(this._paymentActionCreator.authenticateThreeDS(payment.methodId, payment.gatewayId))
             );
     }
 
