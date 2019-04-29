@@ -13,7 +13,7 @@ import { mapToInternalOrder, OrderActionCreator } from '../order';
 import { mapToInternalShippingOption } from '../shipping';
 
 import isVaultedInstrument from './is-vaulted-instrument';
-import Payment from './payment';
+import Payment, { PaymentInstrument } from './payment';
 import {
     AuthenticateThreeDSAction,
     InitializeOffsitePaymentAction,
@@ -67,10 +67,11 @@ export default class PaymentActionCreator {
 
     authenticateThreeDS(
         methodId: string,
+        paymentData: PaymentInstrument,
         gatewayId?: string
     ): ThunkAction<AuthenticateThreeDSAction, InternalCheckoutSelectors> {
         return store => {
-            const payload = this._getPaymentRequestBody({ gatewayId, methodId }, store.getState());
+            const payload = this._getThreeDSecureRequestBody({ gatewayId, methodId, paymentData }, store.getState());
 
             return concat(
                 of(createAction(PaymentActionType.AuthenticateThreeDSRequested)),
@@ -153,5 +154,44 @@ export default class PaymentActionCreator {
         }
 
         return paymentMethod;
+    }
+
+    private _getThreeDSecureRequestBody(payment: Payment, state: InternalCheckoutSelectors): PaymentRequestBody {
+        const storeConfig = state.config.getStoreConfig();
+        const order = state.order.getOrder();
+        const paymentMethod = this._getPaymentMethod(state.paymentMethods, payment.methodId, payment.gatewayId);
+        const contextConfig = state.config.getContextConfig();
+        const instrumentMeta = state.instruments.getInstrumentsMeta();
+        const paymentMeta = state.paymentMethods.getPaymentMethodsMeta();
+        const orderMeta = state.order.getOrderMeta();
+
+        const authToken = instrumentMeta && payment.paymentData && isVaultedInstrument(payment.paymentData) ?
+            `${state.payment.getPaymentToken()}, ${instrumentMeta.vaultAccessToken}` :
+            state.payment.getPaymentToken();
+
+        if (!authToken) {
+            throw new StandardError();
+        }
+
+        return {
+            authToken,
+            paymentMethod,
+            order: order && mapToInternalOrder(order, orderMeta),
+            orderMeta,
+            payment: payment.paymentData,
+            quoteMeta: {
+                request: {
+                    ...paymentMeta,
+                    geoCountryCode: contextConfig && contextConfig.geoCountryCode,
+                },
+            },
+            source: 'bigcommerce-checkout-js-sdk',
+            store: pick(storeConfig && storeConfig.storeProfile, [
+                'storeHash',
+                'storeId',
+                'storeLanguage',
+                'storeName',
+            ]),
+        };
     }
 }

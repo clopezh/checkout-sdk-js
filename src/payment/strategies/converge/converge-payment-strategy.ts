@@ -24,7 +24,13 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
 
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() =>
-                this._store.dispatch(this._paymentActionCreator.authenticateThreeDS(payment.methodId, payment.gatewayId))
+                this._store.dispatch(
+                    this._paymentActionCreator.authenticateThreeDS(
+                        payment.methodId,
+                        paymentData,
+                        payment.gatewayId
+                    )
+                )
             );
     }
 
