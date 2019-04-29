@@ -165,7 +165,7 @@ export default class PaymentActionCreator {
         const paymentMeta = state.paymentMethods.getPaymentMethodsMeta();
         const orderMeta = state.order.getOrderMeta();
 
-        const authToken = instrumentMeta && payment.paymentData && isVaultedInstrument(payment.paymentData) ?
+        const authToken = instrumentMeta ?
             `${state.payment.getPaymentToken()}, ${instrumentMeta.vaultAccessToken}` :
             state.payment.getPaymentToken();
 
