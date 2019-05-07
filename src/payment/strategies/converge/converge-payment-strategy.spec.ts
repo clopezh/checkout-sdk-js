@@ -1,5 +1,6 @@
 import { createClient as createPaymentClient } from '@bigcommerce/bigpay-client';
 import { createAction } from '@bigcommerce/data-store';
+import {createFormPoster, FormPoster} from '@bigcommerce/form-poster';
 import { createRequestSender } from '@bigcommerce/request-sender';
 import { merge, omit } from 'lodash';
 import { of, Observable } from 'rxjs';
@@ -28,6 +29,7 @@ describe('ConvergePaymentStrategy', () => {
     let store: CheckoutStore;
     let strategy: ConvergePaymentStrategy;
     let submitOrderAction: Observable<SubmitOrderAction>;
+    let formPoster: FormPoster;
 
     beforeEach(() => {
         store = createCheckoutStore(getCheckoutStoreState());
@@ -49,6 +51,7 @@ describe('ConvergePaymentStrategy', () => {
                 paymentData: null,
             },
         });
+        formPoster = createFormPoster();
 
         jest.spyOn(store, 'dispatch');
 
@@ -61,7 +64,15 @@ describe('ConvergePaymentStrategy', () => {
         jest.spyOn(paymentActionCreator, 'initializeOffsitePayment')
             .mockReturnValue(initializeOffsitePaymentAction);
 
-        strategy = new ConvergePaymentStrategy(store, orderActionCreator, paymentActionCreator);
+        jest.spyOn(formPoster, 'postForm')
+            .mockImplementation((url, data, callback = () => {}) => callback());
+
+        strategy = new ConvergePaymentStrategy(
+            store,
+            orderActionCreator,
+            paymentActionCreator,
+            formPoster
+        );
     });
 
     it('submits order without payment data', async () => {

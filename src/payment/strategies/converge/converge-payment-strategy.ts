@@ -1,5 +1,8 @@
+import { some } from 'lodash';
+
 import { CheckoutStore, InternalCheckoutSelectors } from '../../../checkout';
-import { OrderActionCreator, OrderPaymentRequestBody, OrderRequestBody } from '../../../order';
+import { RequestError } from '../../../common/error/errors';
+import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
@@ -12,7 +15,8 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
     constructor(
         private _store: CheckoutStore,
         private _orderActionCreator: OrderActionCreator,
-        private _paymentActionCreator: PaymentActionCreator
+        private _paymentActionCreator: PaymentActionCreator,
+        private _formPoster: any
     ) {}
 
     execute(payload: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
@@ -26,10 +30,30 @@ export default class ConvergePaymentStrategy implements PaymentStrategy {
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() =>
                 this._store.dispatch(this._paymentActionCreator.submitPayment({ ...payment, paymentData }))
-            );
+            )
+            .catch(error => {
+                if (!(error instanceof RequestError) || !some(error.body.errors, { code: 'three_d_secure_required' })) {
+                    return Promise.reject(error);
+                }
+
+                return new Promise(() => {
+                    this._formPoster.postForm(error.body.three_ds_result.acs_url, {
+                        PaReq: error.body.three_ds_result.payer_auth_request,
+                        TermUrl: error.body.three_ds_result.callback_url,
+                        MD: error.body.three_ds_result.merchant_data,
+                    });
+                });
+            });
     }
 
     finalize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
+        const state = this._store.getState();
+        const order = state.order.getOrder();
+
+        if (order && state.payment.getPaymentStatus() === paymentStatusTypes.FINALIZE) {
+            return this._store.dispatch(this._orderActionCreator.finalizeOrder(order.orderId, options));
+        }
+
         return Promise.reject(new OrderFinalizationNotRequiredError());
     }
 

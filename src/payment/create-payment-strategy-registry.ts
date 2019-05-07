@@ -317,7 +317,8 @@ export default function createPaymentStrategyRegistry(
     new ConvergePaymentStrategy(
         store,
         orderActionCreator,
-        paymentActionCreator
+        paymentActionCreator,
+        createFormPoster()
     )
 );
 
