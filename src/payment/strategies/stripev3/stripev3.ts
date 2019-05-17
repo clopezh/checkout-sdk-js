@@ -137,7 +137,7 @@ export interface Properties {
 
 export interface StripeResponse {
     paymentIntent: PaymentIntent;
-    error: Error;
+    error?: Error;
 }
 
 export interface MsClearProperties extends Properties {

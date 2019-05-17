@@ -39,7 +39,14 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
             throw new InvalidArgumentError('Unable to initialize payment because "options.stripe" argument is not provided.');
         }
 
-        return this._stripeScriptLoader.load('pk_test_OiGqP4ZezFBTJErOWeMFumjE') // options.initializationData.stripePublishableKey
+        const paymentMethod = this._store.getState().paymentMethods.getPaymentMethod(options.methodId);
+
+        if (!paymentMethod) {
+            throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
+        }
+
+        // return this._stripeScriptLoader.load('pk_test_OiGqP4ZezFBTJErOWeMFumjE')
+        return this._stripeScriptLoader.load(paymentMethod.initializationData.stripePublishableKey)
             .then((stripeJs: StripeV3Js) => {
                 this.stripeJs = stripeJs;
                 const elements = this.stripeJs.elements();
@@ -88,10 +95,9 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                         };
 
                         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
-                            .then(() => this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload))
-                                .catch(error => {
-                                    throw new StandardError(error);
-                                }));
+                            .then(() =>
+                                this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload))
+                            );
                     }
                 });
             })
