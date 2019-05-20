@@ -1,10 +1,10 @@
+import OrderRequestBody from '../../../order/order-request-body';
 import {PaymentInitializeOptions} from '../../payment-request-options';
 
 import {
     StripeResponse,
     StripeV3Js
 } from './stripev3';
-import OrderRequestBody from '../../../order/order-request-body';
 
 export function getStripeV3JsMock(): StripeV3Js {
     return {
