@@ -1,5 +1,5 @@
 import OrderRequestBody from '../../../order/order-request-body';
-import {PaymentInitializeOptions} from '../../payment-request-options';
+import { PaymentInitializeOptions } from '../../payment-request-options';
 
 import {
     StripeResponse,

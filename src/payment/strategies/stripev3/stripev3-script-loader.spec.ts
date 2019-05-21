@@ -2,7 +2,7 @@ import { ScriptLoader } from '@bigcommerce/script-loader';
 
 import { StandardError } from '../../../common/error/errors';
 
-import {StripeHostWindow, StripeV3JsOptions} from './stripev3';
+import { StripeHostWindow, StripeV3JsOptions } from './stripev3';
 import StripeV3ScriptLoader from './stripev3-script-loader';
 import { getStripeV3JsMock } from './stripev3.mock';
 

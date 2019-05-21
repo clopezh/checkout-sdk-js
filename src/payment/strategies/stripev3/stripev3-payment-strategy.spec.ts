@@ -9,13 +9,14 @@ import {
 } from '../../../checkout';
 import CheckoutStore from '../../../checkout/checkout-store';
 import { getCheckoutState } from '../../../checkout/checkouts.mock';
-import { InvalidArgumentError, StandardError } from '../../../common/error/errors';
+import {InvalidArgumentError, MissingDataError, StandardError} from '../../../common/error/errors';
 import { getConfigState } from '../../../config/configs.mock';
 import { getCustomerState } from '../../../customer/customers.mock';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import OrderActionCreator from '../../../order/order-action-creator';
 import {
-    createPaymentClient, PaymentInitializeOptions,
+    createPaymentClient,
+    PaymentInitializeOptions,
     PaymentMethodRequestSender,
     PaymentRequestSender
 } from '../../../payment';
@@ -32,6 +33,7 @@ import {
     getStripeV3JsMock,
     getStripeV3OrderRequestBodyMock
 } from './stripev3.mock';
+import {PaymentArgumentInvalidError} from '../../errors';
 
 describe('StripeV3PaymentStrategy', () => {
     let store: CheckoutStore;
@@ -74,10 +76,6 @@ describe('StripeV3PaymentStrategy', () => {
         );
     });
 
-    it('creates an instance of StripeV3PaymentStrategy', () => {
-        expect(strategy).toBeInstanceOf(StripeV3PaymentStrategy);
-    });
-
     describe('#initialize()', () => {
         let stripeV3Options: PaymentInitializeOptions;
         let stripeV3JsMock = getStripeV3JsMock();
@@ -101,7 +99,7 @@ describe('StripeV3PaymentStrategy', () => {
             stripeV3Options.stripev3 = undefined;
 
             expect(() => strategy.initialize(stripeV3Options))
-                .toThrowError('Unable to initialize payment because "options.stripe" argument is not provided.');
+                .toThrow(InvalidArgumentError);
         });
 
         it('does not create cardElement if elements are not provided', async () => {
@@ -119,15 +117,14 @@ describe('StripeV3PaymentStrategy', () => {
             const promise = strategy.initialize(stripeV3Options);
 
             await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
-            await expect(promise).rejects
-                .toThrowError('Unable to initialize payment because "StripeCardElement" argument is not provided.');
+            await expect(promise).rejects.toThrow(InvalidArgumentError);
         });
 
         it('does not load stripe V3 if paymentMethod is not provided', () => {
             jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(undefined);
 
             expect(() => strategy.initialize(stripeV3Options))
-                .toThrowError('Unable to proceed because payment method data is unavailable or not properly configured.');
+                .toThrow(MissingDataError);
         });
     });
 
@@ -167,7 +164,7 @@ describe('StripeV3PaymentStrategy', () => {
             };
 
             expect(() => strategy.execute(payload))
-                .toThrowError('Unable to submit payment for the order because the payload is invalid. Make sure the following fields are provided correctly: payment.paymentData.');
+                .toThrow(PaymentArgumentInvalidError);
         });
 
         it('throws an error when store dispatch does not load paymentMethod', async () => {
@@ -197,7 +194,6 @@ describe('StripeV3PaymentStrategy', () => {
 
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toThrowError('Unable to proceed because payment method data is unavailable or not properly configured.');
             expect(response).rejects.toBeInstanceOf(StandardError);
         });
 
@@ -236,25 +232,21 @@ describe('StripeV3PaymentStrategy', () => {
             await strategy.initialize(stripeV3Options);
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toThrowError('Unable to submit payment for the order because the payload is invalid. Make sure the following fields are provided correctly: paymentIntent.id.');
             expect(response).rejects.toBeInstanceOf(StandardError);
         });
 
         it('throws an error when stripe js is not loaded', async () => {
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toThrowError('Unable to initialize payment because "stripeJs" argument is not provided.');
             expect(response).rejects.toBeInstanceOf(StandardError);
         });
     });
 
     describe('#finalize()', () => {
         it('throws error to inform that order finalization is not required', async () => {
-            try {
-                await strategy.finalize();
-            } catch (error) {
-                expect(error).toBeInstanceOf(OrderFinalizationNotRequiredError);
-            }
+            const promise = strategy.finalize();
+
+            expect(promise).rejects.toBeInstanceOf(OrderFinalizationNotRequiredError);
         });
     });
 

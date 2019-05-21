@@ -1,6 +1,6 @@
 import { ScriptLoader } from '@bigcommerce/script-loader';
 
-import {StandardError} from '../../../common/error/errors';
+import { StandardError } from '../../../common/error/errors';
 
 import { StripeHostWindow, StripeV3Js } from './stripev3';
 
