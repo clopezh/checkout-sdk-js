@@ -20,6 +20,7 @@ import {
     PaymentMethodRequestSender,
     PaymentRequestSender
 } from '../../../payment';
+import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { getPaymentMethodsState, getStripeV3 } from '../../payment-methods.mock';
@@ -33,7 +34,6 @@ import {
     getStripeV3JsMock,
     getStripeV3OrderRequestBodyMock
 } from './stripev3.mock';
-import {PaymentArgumentInvalidError} from '../../errors';
 
 describe('StripeV3PaymentStrategy', () => {
     let store: CheckoutStore;
