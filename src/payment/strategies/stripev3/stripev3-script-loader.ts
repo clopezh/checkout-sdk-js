@@ -2,7 +2,7 @@ import { ScriptLoader } from '@bigcommerce/script-loader';
 
 import { StandardError } from '../../../common/error/errors';
 
-import { StripeHostWindow, StripeV3Js } from './stripev3';
+import { StripeHostWindow, StripeV3Client } from './stripev3';
 
 export default class StripeV3ScriptLoader {
     constructor(
@@ -10,7 +10,7 @@ export default class StripeV3ScriptLoader {
         private _window: StripeHostWindow = window
     ) {}
 
-    load(stripePublishableKey: string): Promise<StripeV3Js> {
+    load(publishableKey: string): Promise<StripeV3Client> {
         return this._scriptLoader
             .loadScript('https://js.stripe.com/v3/')
             .then(() => {
@@ -18,7 +18,7 @@ export default class StripeV3ScriptLoader {
                     throw new StandardError();
                 }
 
-                return this._window.Stripe(stripePublishableKey, {
+                return this._window.Stripe(publishableKey, {
                     betas: ['payment_intent_beta_3'],
                 });
             });

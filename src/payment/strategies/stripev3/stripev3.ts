@@ -2,14 +2,14 @@ export interface StripeHostWindow extends Window {
     Stripe?(
         stripePublishableKey: string,
         options: StripeV3JsOptions
-    ): StripeV3Js;
+    ): StripeV3Client;
 }
 
 export interface StripeV3JsOptions {
     betas: string[];
 }
 
-export interface StripeV3Js {
+export interface StripeV3Client {
     elements(): StripeElements;
     handleCardPayment(
         clientToken: string,
@@ -20,6 +20,7 @@ export interface StripeV3Js {
 
 export interface StripeCardElement {
     mount(containerId: string): HTMLElement;
+    unmount(): void;
 }
 
 export interface StripeElements {

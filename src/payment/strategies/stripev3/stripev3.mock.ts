@@ -3,16 +3,17 @@ import { PaymentInitializeOptions } from '../../payment-request-options';
 
 import {
     StripeResponse,
-    StripeV3Js
+    StripeV3Client
 } from './stripev3';
 
-export function getStripeV3JsMock(): StripeV3Js {
+export function getStripeV3JsMock(): StripeV3Client {
     return {
         elements: jest.fn(() => {
             return {
                 create: jest.fn(() => {
                     return {
                         mount: jest.fn(),
+                        unmount: jest.fn(),
                     };
                 }),
             };
@@ -26,7 +27,7 @@ export function getStripeV3InitializeOptionsMock(): PaymentInitializeOptions {
         methodId: 'stripev3',
         stripev3: {
             containerId: 'stripeContainerId',
-            elementProps: {
+            style: {
                 base: {
                     color: '#32325D',
                     fontWeight: 500,

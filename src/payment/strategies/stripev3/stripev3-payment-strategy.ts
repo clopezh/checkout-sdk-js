@@ -15,14 +15,13 @@ import PaymentStrategy from '../payment-strategy';
 
 import {
     StripeCardElement,
-    StripeResponse,
     StripeScriptLoader,
-    StripeV3Js
+    StripeV3Client
 } from './index';
 
 export default class StripeV3PaymentStrategy implements PaymentStrategy {
-    private stripeJs?: StripeV3Js;
-    private cardElement?: StripeCardElement;
+    private _stripeV3Client?: StripeV3Client;
+    private _cardElement?: StripeCardElement;
 
     constructor(
         private _store: CheckoutStore,
@@ -33,10 +32,10 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
     ) {}
 
     initialize(options: PaymentInitializeOptions): Promise<InternalCheckoutSelectors> {
-        const DOMElement = options.stripev3;
+        const stripeOptions = options.stripev3;
 
-        if (!DOMElement) {
-            throw new InvalidArgumentError('Unable to initialize payment because "options.stripe" argument is not provided.');
+        if (!stripeOptions) {
+            throw new InvalidArgumentError('Unable to initialize payment because "options.stripev3" argument is not provided.');
         }
 
         const paymentMethod = this._store.getState().paymentMethods.getPaymentMethod(options.methodId);
@@ -46,18 +45,16 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         }
 
         return this._stripeScriptLoader.load(paymentMethod.initializationData.stripePublishableKey)
-            .then((stripeJs: StripeV3Js) => {
-                this.stripeJs = stripeJs;
-                const elements = this.stripeJs.elements();
-                this.cardElement = elements.create('card', {
-                    style: DOMElement.elementProps,
+            .then(stripeJs => {
+                this._stripeV3Client = stripeJs;
+                const elements = this._stripeV3Client.elements();
+                const cardElement = elements.create('card', {
+                    style: stripeOptions.style,
                 });
 
-                if (!this.cardElement) {
-                    throw new InvalidArgumentError('Unable to initialize payment because "StripeCardElement" argument is not provided.');
-                }
+                cardElement.mount(`#${stripeOptions.containerId}`);
 
-                this.cardElement.mount('#' + DOMElement.containerId);
+                this._cardElement = cardElement;
 
                 return Promise.resolve(this._store.getState());
             });
@@ -67,7 +64,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         const { payment, ...order } = payload;
 
         if (!payment) {
-            throw new PaymentArgumentInvalidError(['payment.paymentData']);
+            throw new PaymentArgumentInvalidError(['payment']);
         }
 
         return this._store.dispatch(this._paymentMethodActionCreator.loadPaymentMethod(payment.methodId))
@@ -80,27 +77,22 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
 
                 return this._getStripeJs().handleCardPayment(
                     paymentMethod.clientToken, this._getCardElement(), {}
-                ).then((stripeResponse: StripeResponse) => {
-                    if (stripeResponse.error) {
-                        throw new StandardError(stripeResponse.error.message);
-                    } else {
-                        if (!stripeResponse.paymentIntent.id) {
-                            throw new PaymentArgumentInvalidError(['paymentIntent.id']);
-                        }
-
-                        const paymentPayload = {
-                            methodId: payment.methodId,
-                            paymentData: { nonce: stripeResponse.paymentIntent.id },
-                        };
-
-                        return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
-                            .then(() =>
-                                this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload))
-                            );
+                ).then(stripeResponse => {
+                    if (stripeResponse.error || !stripeResponse.paymentIntent.id) {
+                        throw new StandardError(stripeResponse.error && stripeResponse.error.message);
                     }
+
+                    const paymentPayload = {
+                        methodId: payment.methodId,
+                        paymentData: { nonce: stripeResponse.paymentIntent.id },
+                    };
+
+                    return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
+                        .then(() =>
+                            this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload))
+                        );
                 });
-            })
-            .catch((error: Error) => { throw new StandardError(error.message); });
+            });
     }
 
     finalize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
@@ -108,22 +100,24 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
     }
 
     deinitialize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
+        this._getCardElement().unmount();
+
         return Promise.resolve(this._store.getState());
     }
 
-    private _getStripeJs() {
-        if (!this.stripeJs) {
+    private _getStripeJs(): StripeV3Client {
+        if (!this._stripeV3Client) {
             throw new InvalidArgumentError('Unable to initialize payment because "stripeJs" argument is not provided.');
         }
 
-        return this.stripeJs;
+        return this._stripeV3Client;
     }
 
-    private _getCardElement() {
-        if (!this.cardElement) {
+    private _getCardElement(): StripeCardElement {
+        if (!this._cardElement) {
             throw new InvalidArgumentError('Unable to initialize payment because "StripeCardElement" argument is not provided.');
         }
 
-        return this.cardElement;
+        return this._cardElement;
     }
 }

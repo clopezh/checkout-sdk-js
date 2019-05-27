@@ -16,5 +16,5 @@ export default interface StripeV3PaymentInitializeOptions {
     /**
      * The set of CSS styles to apply to all form fields.
      */
-    elementProps?: StripeStyleProps;
+    style?: StripeStyleProps;
 }

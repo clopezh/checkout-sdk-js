@@ -77,8 +77,8 @@ describe('StripeV3PaymentStrategy', () => {
     });
 
     describe('#initialize()', () => {
+        const stripeV3JsMock = getStripeV3JsMock();
         let stripeV3Options: PaymentInitializeOptions;
-        let stripeV3JsMock = getStripeV3JsMock();
 
         beforeEach(() => {
             stripeV3Options = getStripeV3InitializeOptionsMock();
@@ -92,7 +92,8 @@ describe('StripeV3PaymentStrategy', () => {
             const promise =  strategy.initialize(stripeV3Options);
 
             expect(stripeScriptLoader.load).toHaveBeenCalled();
-            expect(promise).resolves.toBe(store.getState());
+
+            return expect(promise).resolves.toBe(store.getState());
         });
 
         it('does not load stripe V3 if initialization options are not provided', () => {
@@ -100,24 +101,6 @@ describe('StripeV3PaymentStrategy', () => {
 
             expect(() => strategy.initialize(stripeV3Options))
                 .toThrow(InvalidArgumentError);
-        });
-
-        it('does not create cardElement if elements are not provided', async () => {
-            stripeV3JsMock = {
-                elements: jest.fn(() => {
-                    return {
-                        create: jest.fn(() => undefined),
-                    };
-                }),
-                handleCardPayment: jest.fn(),
-            };
-
-            jest.spyOn(stripeScriptLoader, 'load').mockReturnValue(Promise.resolve(stripeV3JsMock));
-
-            const promise = strategy.initialize(stripeV3Options);
-
-            await expect(promise).rejects.toBeInstanceOf(InvalidArgumentError);
-            await expect(promise).rejects.toThrow(InvalidArgumentError);
         });
 
         it('does not load stripe V3 if paymentMethod is not provided', () => {
@@ -168,12 +151,12 @@ describe('StripeV3PaymentStrategy', () => {
         });
 
         it('throws an error when store dispatch does not load paymentMethod', async () => {
-            jest.spyOn(store, 'dispatch').mockReturnValue(Promise.reject({message: 'error'}));
+            const error = {message: 'error'};
+            jest.spyOn(store, 'dispatch').mockReturnValue(Promise.reject(error));
 
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toThrowError('error');
-            expect(response).rejects.toBeInstanceOf(StandardError);
+            return expect(response).rejects.toBe(error);
         });
 
         it('throws an error when getPaymentMethod will not retrieve clientToken', async () => {
@@ -194,7 +177,7 @@ describe('StripeV3PaymentStrategy', () => {
 
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toBeInstanceOf(StandardError);
+            return expect(response).rejects.toBeInstanceOf(StandardError);
         });
 
         it('throws an error when handleCardPayment retrieve an error', async () => {
@@ -215,8 +198,7 @@ describe('StripeV3PaymentStrategy', () => {
             await strategy.initialize(stripeV3Options);
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toThrowError('Error from stripe js');
-            expect(response).rejects.toBeInstanceOf(StandardError);
+            return expect(response).rejects.toBeInstanceOf(StandardError);
         });
 
         it('throws an error when handleCardPayment will not retrieve a paymentIntent id', async () => {
@@ -232,13 +214,13 @@ describe('StripeV3PaymentStrategy', () => {
             await strategy.initialize(stripeV3Options);
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toBeInstanceOf(StandardError);
+            return expect(response).rejects.toBeInstanceOf(StandardError);
         });
 
         it('throws an error when stripe js is not loaded', async () => {
             const response = strategy.execute(getStripeV3OrderRequestBodyMock());
 
-            expect(response).rejects.toBeInstanceOf(StandardError);
+            return expect(response).rejects.toBeInstanceOf(StandardError);
         });
     });
 
@@ -246,15 +228,25 @@ describe('StripeV3PaymentStrategy', () => {
         it('throws error to inform that order finalization is not required', async () => {
             const promise = strategy.finalize();
 
-            expect(promise).rejects.toBeInstanceOf(OrderFinalizationNotRequiredError);
+            return expect(promise).rejects.toBeInstanceOf(OrderFinalizationNotRequiredError);
         });
     });
 
     describe('#deinitialize', () => {
         it('deinitializes stripe payment strategy', async () => {
+            const stripeV3JsMock = getStripeV3JsMock();
+
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getStripeV3());
+            jest.spyOn(stripeScriptLoader, 'load').mockReturnValue(Promise.resolve(stripeV3JsMock));
+
+            await strategy.initialize(getStripeV3InitializeOptionsMock());
             const promise = strategy.deinitialize();
 
-            expect(promise).resolves.toBe(store.getState());
+            return expect(promise).resolves.toBe(store.getState());
+        });
+
+        it('throws when cardElement is not defined', async () => {
+            expect(() => strategy.deinitialize()).toThrow(InvalidArgumentError);
         });
     });
 });
