@@ -9,7 +9,11 @@ import {
 } from '../../../checkout';
 import CheckoutStore from '../../../checkout/checkout-store';
 import { getCheckoutState } from '../../../checkout/checkouts.mock';
-import {InvalidArgumentError, MissingDataError, StandardError} from '../../../common/error/errors';
+import {
+    InvalidArgumentError,
+    MissingDataError,
+    StandardError
+} from '../../../common/error/errors';
 import { getConfigState } from '../../../config/configs.mock';
 import { getCustomerState } from '../../../customer/customers.mock';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
@@ -243,10 +247,6 @@ describe('StripeV3PaymentStrategy', () => {
             const promise = strategy.deinitialize();
 
             return expect(promise).resolves.toBe(store.getState());
-        });
-
-        it('throws when cardElement is not defined', async () => {
-            expect(() => strategy.deinitialize()).toThrow(InvalidArgumentError);
         });
     });
 });

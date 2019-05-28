@@ -3,6 +3,7 @@ import {
     InvalidArgumentError,
     MissingDataError,
     MissingDataErrorType,
+    NotInitializedError, NotInitializedErrorType,
     StandardError
 } from '../../../common/error/errors';
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
@@ -13,11 +14,8 @@ import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import {
-    StripeCardElement,
-    StripeScriptLoader,
-    StripeV3Client
-} from './index';
+import { StripeCardElement, StripeV3Client } from './stripev3';
+import StripeV3ScriptLoader from './stripev3-script-loader';
 
 export default class StripeV3PaymentStrategy implements PaymentStrategy {
     private _stripeV3Client?: StripeV3Client;
@@ -28,7 +26,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         private _paymentMethodActionCreator: PaymentMethodActionCreator,
         private _paymentActionCreator: PaymentActionCreator,
         private _orderActionCreator: OrderActionCreator,
-        private _stripeScriptLoader: StripeScriptLoader
+        private _stripeScriptLoader: StripeV3ScriptLoader
     ) {}
 
     initialize(options: PaymentInitializeOptions): Promise<InternalCheckoutSelectors> {
@@ -75,8 +73,12 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                     throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
                 }
 
+                if (!this._cardElement) {
+                    throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
+                }
+
                 return this._getStripeJs().handleCardPayment(
-                    paymentMethod.clientToken, this._getCardElement(), {}
+                    paymentMethod.clientToken, this._cardElement, {}
                 ).then(stripeResponse => {
                     if (stripeResponse.error || !stripeResponse.paymentIntent.id) {
                         throw new StandardError(stripeResponse.error && stripeResponse.error.message);
@@ -100,24 +102,18 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
     }
 
     deinitialize(options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
-        this._getCardElement().unmount();
+        if (this._cardElement) {
+            this._cardElement.unmount();
+        }
 
         return Promise.resolve(this._store.getState());
     }
 
     private _getStripeJs(): StripeV3Client {
         if (!this._stripeV3Client) {
-            throw new InvalidArgumentError('Unable to initialize payment because "stripeJs" argument is not provided.');
+            throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
         }
 
         return this._stripeV3Client;
-    }
-
-    private _getCardElement(): StripeCardElement {
-        if (!this._cardElement) {
-            throw new InvalidArgumentError('Unable to initialize payment because "StripeCardElement" argument is not provided.');
-        }
-
-        return this._cardElement;
     }
 }
