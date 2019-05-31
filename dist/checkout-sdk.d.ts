@@ -137,6 +137,16 @@ declare interface Banner {
     text: string;
 }
 
+declare interface BaseProps extends Properties {
+    ':hover'?: Properties;
+    ':focus'?: Properties;
+    '::placeholder'?: Properties;
+    '::selection'?: Properties;
+    ':-webkit-autofill'?: Properties;
+    ':disabled'?: Properties;
+    '::ms-clear'?: MsClearProperties;
+}
+
 declare interface BillingAddress extends Address {
     id: string;
     email?: string;
@@ -279,6 +289,14 @@ declare interface ButtonStyles extends BlockElementStyles {
 declare enum ButtonType {
     Long = "long",
     Short = "short"
+}
+
+declare interface CardElementProps extends BaseProps {
+    value?: string;
+    hidePostalCode?: boolean;
+    iconStyle?: string;
+    hideIcon?: boolean;
+    disabled?: boolean;
 }
 
 declare interface Cart {
@@ -2702,6 +2720,10 @@ declare interface MasterpassPaymentInitializeOptions {
     walletButton?: string;
 }
 
+declare interface MsClearProperties extends Properties {
+    display?: string;
+}
+
 declare interface NonceGenerationError {
     type: string;
     message: string;
@@ -2846,6 +2868,11 @@ declare interface PaymentInitializeOptions extends PaymentRequestOptions {
      * They can be omitted unless you need to support GooglePay.
      */
     googlepaystripe?: GooglePayPaymentInitializeOptions;
+    /**
+     * The options that are required to initialize the Stripe payment method.
+     * They can be omitted unless you need to support StripeV3.
+     */
+    stripev3?: StripeV3PaymentInitializeOptions;
 }
 
 declare interface PaymentMethod {
@@ -2952,6 +2979,24 @@ declare interface PhysicalItem extends LineItem {
 
 declare interface Promotion {
     banners: Banner[];
+}
+
+declare interface Properties {
+    color?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    fontSmoothing?: string;
+    fontStyle?: string;
+    fontVariant?: string;
+    fontWeight?: string | number;
+    iconColor?: string;
+    lineHeight?: string | number;
+    letterSpacing?: string;
+    textAlign?: string;
+    padding?: string;
+    textDecoration?: string;
+    textShadow?: string;
+    textTransform?: string;
 }
 
 declare interface Region {
@@ -3158,6 +3203,58 @@ declare interface StoreProfile {
     storeName: string;
     storePhoneNumber: string;
     storeLanguage: string;
+}
+
+declare interface StripeStyleProps {
+    /**
+     * The base class applied to the container.
+     * Defaults to StripeElement.
+     */
+    base?: CardElementProps;
+    /**
+     * The class name to apply when the Element is complete.
+     * Defaults to StripeElement--complete.
+     */
+    complete?: CardElementProps;
+    /**
+     * The class name to apply when the Element is empty.
+     * Defaults to StripeElement--empty.
+     */
+    empty?: CardElementProps;
+    /**
+     * The class name to apply when the Element is focused.
+     * Defaults to StripeElement--focus.
+     */
+    focus?: CardElementProps;
+    /**
+     * The class name to apply when the Element is invalid.
+     * Defaults to StripeElement--invalid.
+     */
+    invalid?: CardElementProps;
+    /**
+     * The class name to apply when the Element has its value
+     * autofilled by the browser (only on Chrome and Safari).
+     * Defaults to StripeElement--webkit-autofill.
+     */
+    webkitAutofill?: CardElementProps;
+}
+
+/**
+ * A set of options that are required to initialize the Stripe payment method.
+ *
+ * Once Stripe payment is initialized, credit card form fields, provided by the
+ * payment provider as iframes, will be inserted into the current page. These
+ * options provide a location and styling for each of the form fields.
+ */
+declare interface StripeV3PaymentInitializeOptions {
+    /**
+     * The location to insert the credit card number form field.
+     */
+    containerId: string;
+    /**
+     * The set of CSS styles to apply to all form fields.
+     */
+    style?: StripeStyleProps;
 }
 
 declare interface Tax {
