@@ -1,3 +1,5 @@
+import { Address } from '../../../address';
+import { BillingAddress } from '../../../billing';
 import { CheckoutStore, InternalCheckoutSelectors } from '../../../checkout';
 import {
     InvalidArgumentError,
@@ -6,6 +8,7 @@ import {
     NotInitializedError, NotInitializedErrorType,
     StandardError
 } from '../../../common/error/errors';
+import { Customer } from '../../../customer';
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
@@ -14,7 +17,14 @@ import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { StripeCardElement, StripeV3Client } from './stripev3';
+import {
+    StripeAddress,
+    StripeBillingDetails,
+    StripeCardElement,
+    StripeHandleCardPaymentOptions,
+    StripeShippingDetails,
+    StripeV3Client
+} from './stripev3';
 import StripeV3ScriptLoader from './stripev3-script-loader';
 
 export default class StripeV3PaymentStrategy implements PaymentStrategy {
@@ -78,7 +88,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                 }
 
                 return this._getStripeJs().handleCardPayment(
-                    paymentMethod.clientToken, this._cardElement, {}
+                    paymentMethod.clientToken, this._cardElement, this._mapStripeCardPaymentOptions()
                 ).then(stripeResponse => {
                     if (stripeResponse.error || !stripeResponse.paymentIntent.id) {
                         throw new StandardError(stripeResponse.error && stripeResponse.error.message);
@@ -115,5 +125,134 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         }
 
         return this._stripeV3Client;
+    }
+
+    private _mapStripeBillingAddress(billingAddress: BillingAddress | undefined): StripeAddress | undefined {
+        if (!billingAddress) {
+            return undefined;
+        }
+
+        return {
+            city: billingAddress.city,
+            country: billingAddress.countryCode,
+            line1: billingAddress.address1,
+            line2: billingAddress.address2,
+            postal_code: billingAddress.postalCode,
+            state: billingAddress.postalCode,
+        };
+    }
+
+    private _mapStripeShippingAddress(shippingAddress: Address | undefined): StripeAddress {
+        if (!shippingAddress) {
+            return {
+                city: undefined,
+                country: undefined,
+                line1: undefined,
+                line2: undefined,
+                postal_code: undefined,
+                state: undefined,
+            };
+        }
+
+        return {
+            city: shippingAddress.city,
+            country: shippingAddress.countryCode,
+            line1: shippingAddress.address1,
+            line2: shippingAddress.address2,
+            postal_code: shippingAddress.postalCode,
+            state: shippingAddress.postalCode,
+        };
+    }
+
+    private _mapStripeBillingDetails({ billingAddress, customer }: { billingAddress?: BillingAddress; customer?: Customer; } = {}): StripeBillingDetails {
+        const striepBillingDetails = {
+            address: this._mapStripeBillingAddress(billingAddress),
+        };
+
+        if (striepBillingDetails.address) {
+            if (customer) {
+                return {
+                    ...striepBillingDetails,
+                    email: customer.email,
+                    name: customer.firstName + customer.lastName,
+                };
+            } else {
+                return {
+                    ...striepBillingDetails,
+                    name: 'Guest',
+                };
+            }
+        }
+
+        if (customer) {
+            return {
+                email: customer.email,
+                name: customer.firstName + customer.lastName,
+            };
+        }
+
+        return {
+            name: 'Guest',
+        };
+    }
+
+    private _mapStripeShippingDetails({ shippingAddress, customer }: { shippingAddress?: Address ; customer?: Customer; } = {}): StripeShippingDetails {
+        const stripeShippingDetails = {
+            address: this._mapStripeShippingAddress(shippingAddress),
+        };
+
+        if (customer) {
+            return {
+                ...stripeShippingDetails,
+                name: customer.firstName + customer.lastName,
+            };
+        }
+
+        return {
+            ...stripeShippingDetails,
+            name: 'Guest',
+        };
+    }
+
+    private _mapStripeCardPaymentOptions(): StripeHandleCardPaymentOptions {
+        const customer = this._store.getState().customer.getCustomer();
+        const billingAddress = this._store.getState().billingAddress.getBillingAddress();
+        const shippingAddress = this._store.getState().shippingAddress.getShippingAddress();
+
+        const paymentMethodData = {
+            payment_method_data: {
+                billing_details: this._mapStripeBillingDetails({ billingAddress, customer }),
+            },
+        };
+
+        const shippingDetails = {
+            shipping: this._mapStripeShippingDetails({ shippingAddress, customer }),
+        };
+
+        if (billingAddress) {
+            if (customer) {
+                return {
+                    ...paymentMethodData,
+                    ...shippingDetails,
+                    receipt_email: customer.email,
+                };
+            } else {
+                return {
+                    ...paymentMethodData,
+                    ...shippingDetails,
+                };
+            }
+        }
+
+        if (customer) {
+            return {
+                ...shippingDetails,
+                receipt_email: customer.email,
+            };
+        } else {
+            return {
+                ...shippingDetails,
+            };
+        }
     }
 }
