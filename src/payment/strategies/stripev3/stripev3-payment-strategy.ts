@@ -69,7 +69,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
     }
 
     execute(payload: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
-        const { payment, ...order } = payload;
+        const { payment, shouldSaveInstrument, ...order } = payload;
 
         if (!payment) {
             throw new PaymentArgumentInvalidError(['payment']);
@@ -96,7 +96,10 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
 
                     const paymentPayload = {
                         methodId: payment.methodId,
-                        paymentData: { nonce: stripeResponse.paymentIntent.id },
+                        paymentData: {
+                            nonce: stripeResponse.paymentIntent.id,
+                            shouldSaveInstrument,
+                        },
                     };
 
                     return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
