@@ -5,7 +5,7 @@ import { catchError, switchMap } from 'rxjs/operators';
 
 import { mapToInternalAddress } from '../address';
 import { mapToInternalCart } from '../cart';
-import {CheckoutStore, InternalCheckoutSelectors} from '../checkout';
+import { CheckoutStore, InternalCheckoutSelectors } from '../checkout';
 import { throwErrorAction } from '../common/error';
 import { StandardError } from '../common/error/errors';
 import { mapToInternalCustomer } from '../customer';

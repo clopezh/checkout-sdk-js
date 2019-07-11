@@ -31,7 +31,7 @@ import {
     PaymentRequestSender
 } from '../../../payment';
 import { getShippingAddress } from '../../../shipping/shipping-addresses.mock';
-import {PaymentArgumentInvalidError} from '../../errors';
+import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { getPaymentMethodsState, getStripeV3 } from '../../payment-methods.mock';
