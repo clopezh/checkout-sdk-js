@@ -35,6 +35,7 @@ import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { getPaymentMethodsState, getStripeV3 } from '../../payment-methods.mock';
+import PaymentRequestTransformer from '../../payment-request-transformer';
 
 import StripeV3PaymentStrategy from './stripev3-payment-strategy';
 import StripeV3ScriptLoader from './stripev3-script-loader';
@@ -55,6 +56,7 @@ describe('StripeV3PaymentStrategy', () => {
     let strategy: StripeV3PaymentStrategy;
     let paymentMethodActionCreator: PaymentMethodActionCreator;
     let paymentActionCreator: PaymentActionCreator;
+    let paymentRequestSender: PaymentRequestSender;
     let orderActionCreator: OrderActionCreator;
     let stripeScriptLoader: StripeV3ScriptLoader;
 
@@ -71,9 +73,10 @@ describe('StripeV3PaymentStrategy', () => {
         const paymentMethodRequestSender: PaymentMethodRequestSender = new PaymentMethodRequestSender(requestSender);
         const paymentClient = createPaymentClient(store);
         const scriptLoader = createScriptLoader();
+        paymentRequestSender = new PaymentRequestSender(paymentClient);
 
         paymentMethodActionCreator = new PaymentMethodActionCreator(paymentMethodRequestSender);
-        paymentActionCreator = new PaymentActionCreator(new PaymentRequestSender(paymentClient), orderActionCreator);
+        paymentActionCreator = new PaymentActionCreator(paymentRequestSender, orderActionCreator);
         orderActionCreator = new OrderActionCreator(
             paymentClient,
             new CheckoutValidator(
@@ -88,7 +91,8 @@ describe('StripeV3PaymentStrategy', () => {
             paymentMethodActionCreator,
             paymentActionCreator,
             orderActionCreator,
-            stripeScriptLoader
+            stripeScriptLoader,
+            paymentRequestSender
         );
     });
 
@@ -138,8 +142,15 @@ describe('StripeV3PaymentStrategy', () => {
             jest.spyOn(paymentMethodActionCreator, 'loadPaymentMethod').mockReturnValue(Promise.resolve());
             jest.spyOn(orderActionCreator, 'submitOrder').mockReturnValue(Promise.resolve());
             jest.spyOn(paymentActionCreator, 'submitPayment').mockReturnValue(Promise.resolve());
-            jest.spyOn(paymentActionCreator, 'generatePaymentIntent')
-                .mockReturnValue(Promise.resolve('paymentIntent'));
+            jest.spyOn(paymentRequestSender, 'generatePaymentIntent')
+                .mockReturnValue(Promise.resolve({
+                    body: {
+                        client_token: 'paymentIntent',
+                    },
+                }));
+            jest.spyOn(PaymentRequestTransformer, 'transform').mockReturnValue({
+                state: 'state',
+            });
         });
 
         it('creates the order and submit payment', async () => {
@@ -164,7 +175,7 @@ describe('StripeV3PaymentStrategy', () => {
             expect(stripeV3JsMock.handleCardPayment).toHaveBeenCalled();
             expect(stripeV3JsMock.createPaymentMethod).toHaveBeenCalled();
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
-            expect(paymentActionCreator.generatePaymentIntent).toHaveBeenCalled();
+            expect(paymentRequestSender.generatePaymentIntent).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(response).toBe(store.getState());
         });
@@ -319,7 +330,7 @@ describe('StripeV3PaymentStrategy', () => {
                 }
             );
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
-            expect(paymentActionCreator.generatePaymentIntent).toHaveBeenCalled();
+            expect(paymentRequestSender.generatePaymentIntent).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(response).toBe(store.getState());
         });
@@ -364,7 +375,7 @@ describe('StripeV3PaymentStrategy', () => {
                 }
             );
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
-            expect(paymentActionCreator.generatePaymentIntent).toHaveBeenCalled();
+            expect(paymentRequestSender.generatePaymentIntent).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(response).toBe(store.getState());
         });
@@ -409,7 +420,7 @@ describe('StripeV3PaymentStrategy', () => {
                 }
             );
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
-            expect(paymentActionCreator.generatePaymentIntent).toHaveBeenCalled();
+            expect(paymentRequestSender.generatePaymentIntent).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(response).toBe(store.getState());
         });
@@ -456,7 +467,7 @@ describe('StripeV3PaymentStrategy', () => {
                 }
             );
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
-            expect(paymentActionCreator.generatePaymentIntent).toHaveBeenCalled();
+            expect(paymentRequestSender.generatePaymentIntent).toHaveBeenCalled();
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(response).toBe(store.getState());
         });

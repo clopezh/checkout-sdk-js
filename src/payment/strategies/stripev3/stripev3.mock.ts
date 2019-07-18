@@ -56,6 +56,9 @@ export function getStripeV3OrderRequestBodyMock(): OrderRequestBody {
     return {
         payment: {
             methodId: 'stripev3',
+            paymentData: {
+                shouldSaveInstrument: false,
+            },
         },
     };
 }

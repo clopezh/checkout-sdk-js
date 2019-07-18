@@ -13,9 +13,13 @@ import { Customer } from '../../../customer';
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
+import isVaultedInstrument from '../../is-vaulted-instrument';
+import { HostedInstrument } from '../../payment';
 import PaymentActionCreator from '../../payment-action-creator';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
+import PaymentRequestSender from '../../payment-request-sender';
+import PaymentRequestTransformer from '../../payment-request-transformer';
 import PaymentStrategy from '../payment-strategy';
 
 import {
@@ -38,7 +42,8 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         private _paymentMethodActionCreator: PaymentMethodActionCreator,
         private _paymentActionCreator: PaymentActionCreator,
         private _orderActionCreator: OrderActionCreator,
-        private _stripeScriptLoader: StripeV3ScriptLoader
+        private _stripeScriptLoader: StripeV3ScriptLoader,
+        private _paymentRequestSender: PaymentRequestSender
     ) {}
 
     initialize(options: PaymentInitializeOptions): Promise<InternalCheckoutSelectors> {
@@ -72,8 +77,8 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
 
     execute(payload: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
         const { payment, ...order } = payload;
-        const shouldSaveInstrument: boolean = !!payload.shouldSaveInstrument;
         const paymentData = payment && payment.paymentData;
+        const shouldSaveInstrument = Boolean(paymentData && (paymentData as HostedInstrument).shouldSaveInstrument);
 
         if (!payment) {
             throw new PaymentArgumentInvalidError(['payment']);
@@ -81,11 +86,11 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
 
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() => {
-                if (paymentData) {
+                if (paymentData && isVaultedInstrument(paymentData)) {
                     return this._store.dispatch(this._paymentActionCreator.submitPayment({...payment, paymentData}));
                 }
 
-                return this._paymentActionCreator.generatePaymentIntent(
+                return this._generatePaymentIntent(
                     payment.methodId,
                     shouldSaveInstrument,
                     this._store,
@@ -107,22 +112,22 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                             payment_method: stripePaymentMethod.paymentMethod.id,
                         };
 
-                        return this._getStripeJs().handleCardPayment(paymentIntent, stripeCardPaymentOptions)
-                            .then(stripeResponse => {
-                                if (stripeResponse.error || !stripeResponse.paymentIntent.id) {
-                                    throw new StandardError(stripeResponse.error && stripeResponse.error.message);
-                                }
+                        return this._getStripeJs().handleCardPayment(paymentIntent, stripeCardPaymentOptions);
+                    })
+                    .then(stripeResponse => {
+                        if (stripeResponse.error || !stripeResponse.paymentIntent.id) {
+                            throw new StandardError(stripeResponse.error && stripeResponse.error.message);
+                        }
 
-                                const paymentPayload = {
-                                    methodId: payment.methodId,
-                                    paymentData: {
-                                        nonce: stripeResponse.paymentIntent.id,
-                                        shouldSaveInstrument,
-                                    },
-                                };
+                        const paymentPayload = {
+                            methodId: payment.methodId,
+                            paymentData: {
+                                nonce: stripeResponse.paymentIntent.id,
+                                shouldSaveInstrument,
+                            },
+                        };
 
-                                return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
-                            });
+                        return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
                     });
                 });
             });
@@ -138,6 +143,24 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
         }
 
         return Promise.resolve(this._store.getState());
+    }
+
+    private _generatePaymentIntent(
+        methodId: string,
+        shouldSavePaymentInstrument: boolean,
+        store: CheckoutStore,
+        gatewayId?: string
+    ): Promise<string> {
+        const paymentRequestBody = PaymentRequestTransformer.transform({ gatewayId, methodId }, store.getState());
+        const payload = {
+            ...paymentRequestBody,
+            shouldSavePaymentInstrument,
+        };
+
+        return this._paymentRequestSender.generatePaymentIntent(payload)
+            .then(response => {
+                return response.body.client_token;
+            });
     }
 
     private _getStripeJs(): StripeV3Client {

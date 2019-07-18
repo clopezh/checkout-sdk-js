@@ -1,4 +1,4 @@
-import { CreditCardInstrument, VaultedInstrument } from '../payment';
+import { CreditCardInstrument, HostedInstrument, VaultedInstrument } from '../payment';
 
 /**
  * An object that contains the information required for submitting an order.
@@ -18,12 +18,6 @@ export default interface OrderRequestBody {
      * works if the customer has previously signed in.
      */
     useStoreCredit?: boolean;
-
-    /**
-     * If true, apply to save the credit card as an instrument. It only works if a hosted field needs
-     * to be vaulted.
-     */
-    shouldSaveInstrument?: boolean;
 }
 
 /**
@@ -45,5 +39,5 @@ export interface OrderPaymentRequestBody {
      * An object that contains the details of a credit card or vaulted payment
      * instrument.
      */
-    paymentData?: CreditCardInstrument | VaultedInstrument;
+    paymentData?: CreditCardInstrument | VaultedInstrument | HostedInstrument;
 }
