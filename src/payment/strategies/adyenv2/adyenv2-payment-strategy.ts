@@ -11,7 +11,7 @@ import {
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
-import Payment from '../../payment';
+import Payment, {HostedInstrument} from '../../payment';
 import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
@@ -28,6 +28,7 @@ import {
     ThreeDS2Result
 } from './adyenv2';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
+import isVaultedInstrument from '../../is-vaulted-instrument';
 
 export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
@@ -87,6 +88,9 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
 
     execute(payload: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
         const { payment, ...order } = payload;
+        const paymentData = payment && payment.paymentData;
+        const shouldSaveInstrument = Boolean(paymentData && (paymentData as HostedInstrument).shouldSaveInstrument);
+        console.log(paymentData);
 
         if (!payment) {
             throw new PaymentArgumentInvalidError(['payment']);
@@ -94,10 +98,15 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
 
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() => {
+                if (paymentData && isVaultedInstrument(paymentData)) {
+                    return this._store.dispatch(this._paymentActionCreator.submitPayment({...payment, paymentData}));
+                }
+
                 const paymentPayload = {
                     methodId: payment.methodId,
                     paymentData: {
                         nonce: this._getStateContainer(),
+                        shouldSaveInstrument,
                     },
                 };
 
