@@ -11,7 +11,8 @@ import {
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { PaymentArgumentInvalidError } from '../../errors';
-import Payment, {HostedInstrument} from '../../payment';
+import isVaultedInstrument from '../../is-vaulted-instrument';
+import Payment, { HostedInstrument } from '../../payment';
 import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
@@ -20,7 +21,6 @@ import { AdyenV2PaymentInitializeOptions } from '.';
 import {
     AdyenCardState,
     AdyenCheckout,
-    AdyenComponent,
     AdyenConfiguration,
     AdyenError,
     ResultCode,
@@ -28,11 +28,9 @@ import {
     ThreeDS2Result
 } from './adyenv2';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
-import isVaultedInstrument from '../../is-vaulted-instrument';
 
 export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
-    private _adyenComponent?: AdyenComponent;
     private _stateContainer?: string;
     private _adyenv2?: AdyenV2PaymentInitializeOptions;
 
@@ -80,8 +78,6 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
 
                 adyenComponent.mount(`#${adyenv2.containerId}`);
 
-                this._adyenComponent = adyenComponent;
-
                 return Promise.resolve(this._store.getState());
             });
     }
@@ -90,7 +86,6 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
         const { payment, ...order } = payload;
         const paymentData = payment && payment.paymentData;
         const shouldSaveInstrument = Boolean(paymentData && (paymentData as HostedInstrument).shouldSaveInstrument);
-        console.log(paymentData);
 
         if (!payment) {
             throw new PaymentArgumentInvalidError(['payment']);
@@ -159,10 +154,6 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     }
 
     deinitialize(): Promise<InternalCheckoutSelectors> {
-        if (this._adyenComponent) {
-            this._adyenComponent.unmount();
-        }
-
         return Promise.resolve(this._store.getState());
     }
 
