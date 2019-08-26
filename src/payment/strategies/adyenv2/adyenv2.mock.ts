@@ -74,3 +74,10 @@ export function getInvalidCardState(): AdyenCardState {
         isValid: false,
     };
 }
+
+export function getValidChallengeResponse(): any {
+    return {
+        threeDS2Token: 'token',
+        paymentData: 'paymentData',
+    };
+}

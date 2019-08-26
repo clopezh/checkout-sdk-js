@@ -55,7 +55,8 @@ import {
     getAdyenCheckout,
     getAdyenInitializeOptions,
     getInvalidCardState,
-    getValidCardState
+    getValidCardState,
+    getValidChallengeResponse
 } from './adyenv2.mock';
 
 describe('AdyenV2PaymentStrategy', () => {
@@ -322,14 +323,10 @@ describe('AdyenV2PaymentStrategy', () => {
             await strategy.execute(getOrderRequestBody());
 
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
-            const state = {
-                ...getValidCardState().data.paymentMethod,
-                origin: window.location.origin,
-            };
             expect(paymentActionCreator.submitPayment).toHaveBeenCalledWith({
                 methodId: 'authorizenet',
                 paymentData: {
-                    nonce: JSON.stringify(state, null, 2),
+                    nonce: JSON.stringify(getValidChallengeResponse(), null, 2),
                 },
             });
         });
@@ -829,25 +826,7 @@ describe('AdyenV2PaymentStrategy', () => {
     });
 
     describe('#deinitialize', () => {
-        it('deinitializes adyen payment strategy', async () => {
-            const adyenCheckout = getAdyenCheckout();
-            const adyenComponent = adyenCheckout.create('scheme', {});
-
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
-            jest.spyOn(adyenV2ScriptLoader, 'load').mockReturnValue(Promise.resolve(adyenCheckout));
-            jest.spyOn(adyenCheckout, 'create').mockReturnValue(adyenComponent);
-
-            await strategy.initialize(getAdyenInitializeOptions());
-            const promise = strategy.deinitialize();
-
-            expect(adyenComponent.unmount).toHaveBeenCalled();
-
-            return expect(promise).resolves.toBe(store.getState());
-        });
-
-        it('does not unmount when adyen component is not available', async () => {
-            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
-
+        it('deinitializes the strategy', async () => {
             const promise = strategy.deinitialize();
 
             return expect(promise).resolves.toBe(store.getState());
