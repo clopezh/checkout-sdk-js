@@ -33,6 +33,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
     private _stateContainer?: string;
     private _adyenv2?: AdyenV2PaymentInitializeOptions;
+    private _adyenComponent?: any;
 
     constructor(
         private _store: CheckoutStore,
@@ -77,6 +78,8 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                     });
 
                 adyenComponent.mount(`#${adyenv2.containerId}`);
+
+                this._adyenComponent = adyenComponent;
 
                 return Promise.resolve(this._store.getState());
             });
@@ -154,6 +157,10 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     }
 
     deinitialize(): Promise<InternalCheckoutSelectors> {
+        if (this._adyenComponent) {
+            this._adyenComponent.unmount();
+        }
+
         return Promise.resolve(this._store.getState());
     }
 
