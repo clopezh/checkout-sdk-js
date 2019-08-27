@@ -826,7 +826,25 @@ describe('AdyenV2PaymentStrategy', () => {
     });
 
     describe('#deinitialize', () => {
-        it('deinitializes the strategy', async () => {
+        it('deinitializes adyen payment strategy', async () => {
+            const adyenCheckout = getAdyenCheckout();
+            const adyenComponent = adyenCheckout.create('scheme', {});
+
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
+            jest.spyOn(adyenV2ScriptLoader, 'load').mockReturnValue(Promise.resolve(adyenCheckout));
+            jest.spyOn(adyenCheckout, 'create').mockReturnValue(adyenComponent);
+
+            await strategy.initialize(getAdyenInitializeOptions());
+            const promise = strategy.deinitialize();
+
+            expect(adyenComponent.unmount).toHaveBeenCalled();
+
+            return expect(promise).resolves.toBe(store.getState());
+        });
+
+        it('does not unmount when adyen component is not available', async () => {
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
+
             const promise = strategy.deinitialize();
 
             return expect(promise).resolves.toBe(store.getState());

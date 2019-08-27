@@ -50,7 +50,7 @@ describe('CreatePaymentStrategyRegistry', () => {
         expect(registry).toEqual(expect.any(PaymentStrategyRegistry));
     });
 
-    it('can instantiate amazon', () => {
+    it('can instantiate adyenv2', () => {
         const paymentStrategy = registry.get(PaymentStrategyType.ADYENV2);
         expect(paymentStrategy).toBeInstanceOf(AdyenV2PaymentStrategy);
     });

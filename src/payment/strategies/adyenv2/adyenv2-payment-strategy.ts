@@ -17,23 +17,25 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { AdyenV2PaymentInitializeOptions } from '.';
 import {
     AdyenCardState,
     AdyenCheckout,
+    AdyenComponent,
     AdyenConfiguration,
     AdyenError,
     ResultCode,
     ThreeDS2ComponentType,
-    ThreeDS2Result
+    ThreeDS2OnComplete,
+    ThreeDS2Result,
 } from './adyenv2';
+import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
 
 export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
     private _stateContainer?: string;
     private _adyenv2?: AdyenV2PaymentInitializeOptions;
-    private _adyenComponent?: any;
+    private _adyenComponent?: AdyenComponent;
 
     constructor(
         private _store: CheckoutStore,
@@ -211,7 +213,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             const threeDS2Component = this._adyenCheckout
                 .create(ThreeDS2ComponentType.ThreeDS2Challenge, {
                     challengeToken: resultObject.token,
-                    onComplete: (challengeData: any) => {
+                    onComplete: (challengeData: ThreeDS2OnComplete) => {
                         const challengePaymentPayload = {
                             ...challengeData.data,
                             paymentData: resultObject.payment_data,
@@ -244,7 +246,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             const threeDS2Component = this._adyenCheckout
                 .create(ThreeDS2ComponentType.ThreeDS2DeviceFingerprint, {
                     fingerprintToken: resultObject.token,
-                    onComplete: (fingerprintData: any) => {
+                    onComplete: (fingerprintData: ThreeDS2OnComplete) => {
                         const fingerprintPaymentPayload = {
                             ...fingerprintData.data,
                             paymentData: resultObject.payment_data,

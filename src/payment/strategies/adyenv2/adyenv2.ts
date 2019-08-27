@@ -609,3 +609,13 @@ export interface CssProperties {
     webkitFontSmoothing?: string;
     webkitTransition?: string;
 }
+
+export interface ThreeDS2OnComplete {
+    data: {
+        details: {
+            'threeds2.challengeResult'?: string;
+            'threeds2.fingerprint'?: string;
+            paymentData: string;
+        };
+    };
+}
