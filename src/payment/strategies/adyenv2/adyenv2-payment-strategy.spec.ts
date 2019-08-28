@@ -36,7 +36,7 @@ import { PaymentActionType, SubmitPaymentAction } from '../../payment-actions';
 import { getAdyenV2 } from '../../payment-methods.mock';
 import PaymentRequestSender from '../../payment-request-sender';
 import PaymentRequestTransformer from '../../payment-request-transformer';
-import { getErrorPaymentResponseBody } from '../../payments.mock';
+import { getErrorPaymentResponseBody, getVaultedInstrument } from '../../payments.mock';
 
 import {
     AdyenV2PaymentStrategy,
@@ -815,6 +815,24 @@ describe('AdyenV2PaymentStrategy', () => {
                 MD: 'merchant_data',
             });
         });
+
+        it('submits payment with a vaulted instrument', async () => {
+            const payload = {
+                ...getOrderRequestBody(),
+                payment: {
+                    methodId: 'adyenv2',
+                    paymentData: getVaultedInstrument(),
+                },
+            };
+            const options = { methodId: 'adyenv2' };
+
+            await strategy.execute(payload, options);
+
+            expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), options);
+            expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
+            expect(store.dispatch).toHaveBeenCalledWith(submitOrderAction);
+            expect(store.dispatch).toHaveBeenCalledWith(submitPaymentAction);
+        });
     });
 
     describe('#finalize()', () => {
@@ -846,6 +864,23 @@ describe('AdyenV2PaymentStrategy', () => {
             jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
 
             const promise = strategy.deinitialize();
+
+            return expect(promise).resolves.toBe(store.getState());
+        });
+
+        it('deinitializes adyen when is used an old component', async () => {
+            const adyenCheckout = getAdyenCheckout();
+            const adyenComponent = adyenCheckout.create('scheme', {});
+
+            jest.spyOn(store.getState().paymentMethods, 'getPaymentMethod').mockReturnValue(getAdyenV2());
+            jest.spyOn(adyenV2ScriptLoader, 'load').mockReturnValue(Promise.resolve(adyenCheckout));
+            jest.spyOn(adyenCheckout, 'create').mockReturnValue(adyenComponent);
+
+            await strategy.initialize(getAdyenInitializeOptions());
+            await strategy.initialize(getAdyenInitializeOptions());
+            const promise = strategy.deinitialize();
+
+            expect(adyenComponent.unmount).toHaveBeenCalled();
 
             return expect(promise).resolves.toBe(store.getState());
         });
