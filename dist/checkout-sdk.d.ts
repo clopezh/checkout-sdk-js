@@ -27,6 +27,70 @@ declare interface AddressRequestBody {
     }>;
 }
 
+declare interface AdyenCardDataPaymentMethodState {
+    paymentMethod: AdyenCardPaymentMethodState;
+}
+
+declare interface AdyenCardPaymentMethodState {
+    encryptedCardNumber: string;
+    encryptedExpiryMonth: string;
+    encryptedExpiryYear: string;
+    encryptedSecurityCode: string;
+    holderName?: string;
+    type: string;
+}
+
+declare interface AdyenCardState {
+    data: AdyenCardDataPaymentMethodState;
+    isValid?: boolean;
+}
+
+declare interface AdyenComponent {
+    mount(containerId: string): HTMLElement;
+    unmount(): void;
+}
+
+declare interface AdyenStyleOptions {
+    /**
+     * Base styling applied to the iframe. All styling extends from this style.
+     */
+    base?: CssProperties;
+    /**
+     * Styling applied when a field fails validation.
+     */
+    error?: CssProperties;
+    /**
+     * Styling applied to the field's placeholder values.
+     */
+    placeholder?: CssProperties;
+    /**
+     * Styling applied once a field passes validation.
+     */
+    validated?: CssProperties;
+}
+
+/**
+ * A set of options that are required to initialize the AdyenV2 payment method.
+ *
+ * Once AdyenV2 payment is initialized, credit card form fields, provided by the
+ * payment provider as iframes, will be inserted into the current page. These
+ * options provide a location and styling for each of the form fields.
+ */
+declare interface AdyenV2PaymentInitializeOptions {
+    /**
+     * The location to insert the Adyen component.
+     */
+    containerId: string;
+    /**
+     * Optional. Overwriting the default options
+     */
+    options?: CardComponentOptions;
+    /**
+     * Specify Three3DSChallenge Widget Size
+     */
+    threeDS2ChallengeWidgetSize?: string;
+}
+
 /**
  * A set of options that are required to initialize the customer step of
  * checkout to support Amazon Pay.
@@ -292,6 +356,51 @@ declare interface ButtonStyles extends BlockElementStyles {
 declare enum ButtonType {
     Long = "long",
     Short = "short"
+}
+
+declare interface CardComponentOptions {
+    /**
+     * Set an object containing the details array for type: scheme from
+     * the /paymentMethods response.
+     */
+    details?: InputDetail[];
+    /**
+     * Set to true to show the checkbox to save card details for the next payment.
+     */
+    enableStoreDetails?: boolean;
+    /**
+     * Set to true to request the name of the card holder.
+     */
+    hasHolderName?: boolean;
+    /**
+     * Set to true to require the card holder name.
+     */
+    holderNameRequired?: boolean;
+    /**
+     * Prefill the card holder name field. Supported from Card component
+     */
+    holderName?: string;
+    /**
+     * Defaults to ['mc','visa','amex']. Configure supported card types to
+     * facilitate brand recognition used in the Secured Fields onBrand callback.
+     * See list of available card types. If a shopper enters a card type not
+     * specified in the GroupTypes configuration, the onBrand callback will not be invoked.
+     */
+    groupTypes?: string[];
+    /**
+     * Set a style object to customize the input fields. See Styling Secured Fields
+     * for a list of supported properties.
+     */
+    styles?: AdyenStyleOptions;
+    /**
+     * Specify the sample values you want to appear for card detail input fields.
+     */
+    placeholders?: CreditCardPlaceHolder | SepaPlaceHolder;
+    /**
+     * Called when the shopper enters data in the card input fields.
+     * Here you have the option to override your main Adyen Checkout configuration.
+     */
+    onChange?(state: AdyenCardState, component: AdyenComponent): void;
 }
 
 declare interface CardElementProps extends BaseProps {
@@ -2124,6 +2233,44 @@ declare interface CreditCardInstrument {
     threeDSecure?: ThreeDSecure | ThreeDSecureToken;
 }
 
+declare interface CreditCardPlaceHolder {
+    encryptedCardNumber?: string;
+    encryptedExpiryDate?: string;
+    encryptedSecurityCode: string;
+}
+
+declare interface CssProperties {
+    background?: string;
+    color?: string;
+    display?: string;
+    font?: string;
+    fontFamily?: string;
+    fontSize?: string;
+    fontSizeAdjust?: string;
+    fontSmoothing?: string;
+    fontStretch?: string;
+    fontStyle?: string;
+    fontVariant?: string;
+    fontVariantAlternates?: string;
+    fontVariantCaps?: string;
+    fontVariantEastAsian?: string;
+    fontVariantLigatures?: string;
+    fontVariantNumeric?: string;
+    fontWeight?: string;
+    letterSpacing?: string;
+    lineHeight?: string;
+    mozOsxFontSmoothing?: string;
+    mozTransition?: string;
+    outline?: string;
+    opacity?: string | number;
+    padding?: string;
+    textAlign?: string;
+    textShadow?: string;
+    transition?: string;
+    webkitFontSmoothing?: string;
+    webkitTransition?: string;
+}
+
 declare interface Currency {
     name: string;
     code: string;
@@ -2509,6 +2656,41 @@ declare interface InlineElementStyles {
     lineHeight?: string;
 }
 
+declare interface InputDetail {
+    /**
+     * Configuration parameters for the required input.
+     */
+    configuration?: object;
+    /**
+     * Input details can also be provided recursively.
+     */
+    details?: SubInputDetail[];
+    /**
+     * In case of a select, the URL from which to query the items.
+     */
+    itemSearchUrl?: string;
+    /**
+     * In case of a select, the items to choose from.
+     */
+    items?: Item[];
+    /**
+     * The value to provide in the result.
+     */
+    key?: string;
+    /**
+     * True if this input value is optional.
+     */
+    optional?: boolean;
+    /**
+     * The type of the required input.
+     */
+    type?: string;
+    /**
+     * The value can be pre-filled, if available.
+     */
+    value?: string;
+}
+
 declare interface InputStyles extends BlockElementStyles {
     active?: BlockElementStyles;
     error?: InputStyles;
@@ -2527,6 +2709,17 @@ declare interface Instrument {
     expiryYear: string;
     brand: string;
     trustedShippingAddress: boolean;
+}
+
+declare interface Item {
+    /**
+     * The value to provide in the result.
+     */
+    id?: string;
+    /**
+     * The display name.
+     */
+    name?: string;
 }
 
 declare interface KlarnaLoadResponse {
@@ -2814,6 +3007,11 @@ declare interface PasswordRequirements {
  */
 declare interface PaymentInitializeOptions extends PaymentRequestOptions {
     /**
+     * The options that are required to initialize the AdyenV2 payment
+     * method. They can be omitted unless you need to support AdyenV2.
+     */
+    adyenv2?: AdyenV2PaymentInitializeOptions;
+    /**
      * The options that are required to initialize the Amazon Pay payment
      * method. They can be omitted unless you need to support AmazonPay.
      */
@@ -3033,6 +3231,11 @@ declare interface RequestOptions<TParams = {}> {
      * The parameters of the request, if required.
      */
     params?: TParams;
+}
+
+declare interface SepaPlaceHolder {
+    ownerName?: string;
+    ibanNumber?: string;
 }
 
 /**
@@ -3262,6 +3465,33 @@ declare interface StripeV3PaymentInitializeOptions {
      * The set of CSS styles to apply to all form fields.
      */
     style?: StripeStyleProps;
+}
+
+declare interface SubInputDetail {
+    /**
+     * Configuration parameters for the required input.
+     */
+    configuration?: object;
+    /**
+     * In case of a select, the items to choose from.
+     */
+    items?: Item[];
+    /**
+     * The value to provide in the result.
+     */
+    key?: string;
+    /**
+     * True if this input is optional to provide.
+     */
+    optional?: boolean;
+    /**
+     * The type of the required input.
+     */
+    type?: string;
+    /**
+     * The value can be pre-filled, if available.
+     */
+    value?: string;
 }
 
 declare interface Tax {
