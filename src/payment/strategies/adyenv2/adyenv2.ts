@@ -652,3 +652,14 @@ export interface ThreeDSRequiredErrorResponse {
     };
     status: string;
 }
+
+export interface BrowserInfoRequest {
+    userAgent: string;
+    acceptHeader: string;
+    language: string;
+    colorDepth: number;
+    screenHeight: number;
+    screenWidth: number;
+    timeZoneOffset: number;
+    javaEnabled: boolean;
+}
