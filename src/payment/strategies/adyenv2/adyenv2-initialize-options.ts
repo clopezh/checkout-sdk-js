@@ -1,6 +1,6 @@
 import { Omit } from '../../../common/types';
 
-import { AdyenCreditCardComponentOptions, AdyenThreeDS2Options } from './adyenv2';
+import { AdyenCreditCardComponentOptions, AdyenThreeDS2Options, BrowserInfoRequest } from './adyenv2';
 
 /**
  * A set of options that are required to initialize the AdyenV2 payment method.
@@ -29,4 +29,9 @@ export default interface AdyenV2PaymentInitializeOptions {
      * Optional. Overwriting the default options
      */
     options?: Omit<AdyenCreditCardComponentOptions, 'onChange'>;
+
+    /**
+     * Browser info request
+     */
+    browserInfo: BrowserInfoRequest;
 }

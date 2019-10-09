@@ -87,7 +87,18 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() => {
                 if (paymentData && isVaultedInstrument(paymentData)) {
-                    return this._store.dispatch(this._paymentActionCreator.submitPayment({...payment, paymentData}));
+                    const paymentPayload = {
+                        methodId: payment.methodId,
+                        gatewayId: payment.gatewayId,
+                        paymentData: {
+                            nonce:  JSON.stringify({
+                                payment: paymentData,
+                                browserInfo: this._getAdyenV2PaymentInitializeOptions().browserInfo,
+                            }),
+                        },
+                    };
+
+                    return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
                 }
 
                 const paymentPayload = {
@@ -289,6 +300,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             const state = {
                 ...newState.data.paymentMethod,
                 origin: window.location.origin,
+                browserInfo: this._getAdyenV2PaymentInitializeOptions().browserInfo,
             };
 
             this._stateContainer = JSON.stringify(state);

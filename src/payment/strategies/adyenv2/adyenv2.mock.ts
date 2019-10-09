@@ -40,6 +40,16 @@ export function getAdyenInitializeOptions(): PaymentInitializeOptions {
                 onComplete: jest.fn(),
                 onLoad: jest.fn(),
             },
+            browserInfo: {
+                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+                acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
+                language: 'nl-NL',
+                colorDepth: 24,
+                screenHeight: 1080,
+                screenWidth: 1920,
+                timeZoneOffset: 360,
+                javaEnabled: true,
+            },
         },
     };
 }

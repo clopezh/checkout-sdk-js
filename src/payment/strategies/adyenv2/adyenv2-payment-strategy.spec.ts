@@ -190,14 +190,15 @@ describe('AdyenV2PaymentStrategy', () => {
     });
 
     describe('#execute', () => {
-        const adyenCheckout: AdyenCheckout = getAdyenCheckout();
         const identifyShopperError = getIdentifyShopperError();
         const challengeShopperError = getChallengeShopperError();
         const redirectShopperError = getRedirectShopperError();
+        let adyenCheckout: AdyenCheckout = getAdyenCheckout();
         let adyenComponent: AdyenComponent;
         let componentOptions: ThreeDS2DeviceFingerprintComponentOptions | ThreeDS2ChallengeComponentOptions;
         let options: PaymentInitializeOptions;
         let threeDS2Component: AdyenComponent;
+        let onLoad = () => {};
 
         beforeEach(() => {
             options = getAdyenInitializeOptions();
@@ -209,6 +210,8 @@ describe('AdyenV2PaymentStrategy', () => {
                             threeDS2Token: 'token',
                         },
                     });
+
+                    onLoad();
 
                     return;
                 }),
@@ -318,6 +321,34 @@ describe('AdyenV2PaymentStrategy', () => {
         });
 
         it('returns 3DS2 IdentifyShopper flow', async () => {
+            options = getAdyenInitializeOptions();
+            options.adyenv2 = {
+                containerId: 'adyen-component-field',
+                threeDS2ContainerId: 'adyen-component-field-3ds',
+                options: {
+                    hasHolderName: true,
+                    styles: {},
+                    placeholders: {},
+                },
+                threeDS2Options: {
+                    widgetSize: '1',
+                    onComplete: jest.fn(),
+                    onLoad: jest.fn(callback => {
+                        onLoad = callback;
+                    }),
+                },
+                browserInfo: {
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+                    acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
+                    language: 'nl-NL',
+                    colorDepth: 24,
+                    screenHeight: 1080,
+                    screenWidth: 1920,
+                    timeZoneOffset: 360,
+                    javaEnabled: true,
+                },
+            };
+
             jest.spyOn(adyenCheckout, 'create')
                 .mockImplementationOnce(jest.fn(() => adyenComponent))
                 .mockImplementationOnce(jest.fn((_type, options) => {
@@ -517,6 +548,34 @@ describe('AdyenV2PaymentStrategy', () => {
         });
 
         it('returns 3DS2 ChallengeShopper flow', async () => {
+            options = getAdyenInitializeOptions();
+            options.adyenv2 = {
+                containerId: 'adyen-component-field',
+                threeDS2ContainerId: 'adyen-component-field-3ds',
+                options: {
+                    hasHolderName: true,
+                    styles: {},
+                    placeholders: {},
+                },
+                threeDS2Options: {
+                    widgetSize: '1',
+                    onComplete: jest.fn(),
+                    onLoad: jest.fn(callback => {
+                        onLoad = callback;
+                    }),
+                },
+                browserInfo: {
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.110 Safari/537.36',
+                    acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
+                    language: 'nl-NL',
+                    colorDepth: 24,
+                    screenHeight: 1080,
+                    screenWidth: 1920,
+                    timeZoneOffset: 360,
+                    javaEnabled: true,
+                },
+            };
+
             jest.spyOn(adyenCheckout, 'create')
                 .mockImplementationOnce(jest.fn(() => adyenComponent))
                 .mockImplementationOnce(jest.fn((_type, options) => {
@@ -623,11 +682,15 @@ describe('AdyenV2PaymentStrategy', () => {
                     paymentData: getVaultedInstrument(),
                 },
             };
-            const options = { methodId: 'adyenv2' };
+            const executeOptions = { methodId: 'adyenv2' };
+            adyenCheckout = getAdyenCheckout();
 
-            await strategy.execute(payload, options);
+            jest.spyOn(adyenV2ScriptLoader, 'load').mockReturnValue(Promise.resolve(adyenCheckout));
 
-            expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), options);
+            await strategy.initialize(options);
+            await strategy.execute(payload, executeOptions);
+
+            expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), executeOptions);
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(store.dispatch).toHaveBeenCalledWith(submitOrderAction);
             expect(store.dispatch).toHaveBeenCalledWith(submitPaymentAction);
