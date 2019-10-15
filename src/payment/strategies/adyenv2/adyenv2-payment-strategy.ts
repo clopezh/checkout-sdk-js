@@ -12,7 +12,7 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
+import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, BrowserInfoRequest, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
 
@@ -93,7 +93,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                         paymentData: {
                             nonce:  JSON.stringify({
                                 payment: paymentData,
-                                browserInfo: this._getAdyenV2PaymentInitializeOptions().browserInfo,
+                                browserInfo: this._getBrowserInfo(),
                             }),
                         },
                     };
@@ -300,10 +300,23 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             const state = {
                 ...newState.data.paymentMethod,
                 origin: window.location.origin,
-                browserInfo: this._getAdyenV2PaymentInitializeOptions().browserInfo,
+                browserInfo: this._getBrowserInfo(),
             };
 
             this._stateContainer = JSON.stringify(state);
         }
+    }
+
+    private _getBrowserInfo(): BrowserInfoRequest {
+        return {
+            userAgent: navigator.userAgent,
+            acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
+            language: navigator.language,
+            colorDepth: screen.colorDepth,
+            screenHeight: screen.height,
+            screenWidth: screen.width,
+            timeZoneOffset: new Date().getTimezoneOffset(),
+            javaEnabled: navigator.javaEnabled(),
+        };
     }
 }
