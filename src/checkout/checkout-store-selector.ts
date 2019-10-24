@@ -12,7 +12,7 @@ import { FormField } from '../form';
 import { Country } from '../geography';
 import { Order } from '../order';
 import { PaymentMethod } from '../payment';
-import { Instrument } from '../payment/instrument';
+import { Instrument, PaymentInstrument } from '../payment/instrument';
 import { Consignment, ShippingOption } from '../shipping';
 
 import Checkout from './checkout';
@@ -201,9 +201,20 @@ export default interface CheckoutStoreSelector {
     /**
      * Gets a list of payment instruments associated with the current customer.
      *
+     * @deprecated This method only returns credit card instruments, if you want to
+     * access the rest of the types please use getInstrumentsByPaymentMethod
+     *
      * @returns The list of payment instruments if it is loaded, otherwise undefined.
      */
-    getInstruments(paymentMethod?: PaymentMethod): Instrument[] | undefined;
+    getInstruments(): Instrument[] | undefined;
+
+    /**
+     * Gets a list of payment instruments for a particular payment method associated
+     * with the current customer.
+     *
+     * @returns The list of payment instruments if it is loaded, otherwise undefined.
+     */
+    getInstrumentsByPaymentMethod(paymentMethod: PaymentMethod): PaymentInstrument[] | undefined;
 
     /**
      * Gets a set of form fields that should be presented to customers in order
@@ -379,6 +390,11 @@ export function createCheckoutStoreSelectorFactory(): CheckoutStoreSelectorFacto
         getInstruments => clone(getInstruments)
     );
 
+    const getInstrumentsByPaymentMethod = createSelector(
+        ({ instruments }: InternalCheckoutSelectors) => instruments.getInstrumentsByPaymentMethod,
+        getInstrumentsByPaymentMethod => clone(getInstrumentsByPaymentMethod)
+    );
+
     const getBillingAddressFields = createSelector(
         ({ form }: InternalCheckoutSelectors) => form.getBillingAddressFields,
         ({ countries }: InternalCheckoutSelectors) => countries.getCountries,
@@ -419,6 +435,7 @@ export function createCheckoutStoreSelectorFactory(): CheckoutStoreSelectorFacto
             isPaymentDataRequired: isPaymentDataRequired(state),
             isPaymentDataSubmitted: isPaymentDataSubmitted(state),
             getInstruments: getInstruments(state),
+            getInstrumentsByPaymentMethod: getInstrumentsByPaymentMethod(state),
             getBillingAddressFields: getBillingAddressFields(state),
             getShippingAddressFields: getShippingAddressFields(state),
         };

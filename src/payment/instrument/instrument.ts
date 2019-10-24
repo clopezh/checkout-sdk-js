@@ -1,6 +1,6 @@
-type Instrument = CardInstrument | AccountInstrument;
+type PaymentInstrument = CardInstrument | AccountInstrument;
 
-export default Instrument;
+export default PaymentInstrument;
 
 interface BaseInstrument {
     bigpayToken: string;
@@ -9,6 +9,22 @@ interface BaseInstrument {
     trustedShippingAddress: boolean;
     method: string;
     type: string;
+}
+
+/**
+ * @deprecated This is the old instrument type. Please us CardInstrument,
+ * AccountInstrument and PaymentInstrument.
+ */
+export interface Instrument {
+    bigpayToken: string;
+    defaultInstrument: boolean;
+    provider: string;
+    trustedShippingAddress: boolean;
+    brand: string;
+    expiryMonth: string;
+    expiryYear: string;
+    iin: string;
+    last4: string;
 }
 
 export interface CardInstrument extends BaseInstrument {
