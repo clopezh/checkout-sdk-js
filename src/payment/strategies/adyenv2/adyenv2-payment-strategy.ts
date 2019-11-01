@@ -87,24 +87,30 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
         return this._store.dispatch(this._orderActionCreator.submitOrder(order, options))
             .then(() => {
                 if (paymentData && isVaultedInstrument(paymentData)) {
-                    const paymentPayload = {
-                        methodId: payment.methodId,
-                        gatewayId: payment.gatewayId,
+                    return this._store.dispatch(this._paymentActionCreator.submitPayment({
+                        ...payment,
                         paymentData: {
-                            nonce:  JSON.stringify({
-                                payment: paymentData,
-                                browserInfo: this._getBrowserInfo(),
-                            }),
+                            formattedPayload: {
+                                bigpay_token: {
+                                    credit_card_number_confirmation: paymentData.ccNumber,
+                                    token: paymentData.instrumentId,
+                                    verification_value: paymentData.ccCvv,
+                                },
+                                browser_info: this._getBrowserInfo(),
+                            },
                         },
-                    };
-
-                    return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
+                    }));
                 }
 
                 const paymentPayload = {
-                    methodId: payment.methodId,
+                    ...payment,
                     paymentData: {
-                        nonce: this._getStateContainer(),
+                        formattedPayload: {
+                            credit_card_token: {
+                                token: this._getStateContainer(),
+                            },
+                            browser_info: this._getBrowserInfo(),
+                        },
                         shouldSaveInstrument,
                     },
                 };
@@ -300,7 +306,6 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             const state = {
                 ...newState.data.paymentMethod,
                 origin: window.location.origin,
-                browserInfo: this._getBrowserInfo(),
             };
 
             this._stateContainer = JSON.stringify(state);
@@ -309,14 +314,12 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
 
     private _getBrowserInfo(): BrowserInfoRequest {
         return {
-            userAgent: navigator.userAgent,
-            acceptHeader: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,/;q=0.8',
-            language: navigator.language,
-            colorDepth: screen.colorDepth,
-            screenHeight: screen.height,
-            screenWidth: screen.width,
-            timeZoneOffset: new Date().getTimezoneOffset(),
-            javaEnabled: navigator.javaEnabled(),
+            language: navigator.language || navigator.languages[0],
+            color_depth: screen.colorDepth,
+            screen_height: screen.height,
+            screen_width: screen.width,
+            time_zone_offset: new Date().getTimezoneOffset().toString(),
+            java_enabled: navigator.javaEnabled(),
         };
     }
 }

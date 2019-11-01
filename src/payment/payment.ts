@@ -1,10 +1,12 @@
+import { BrowserInfoRequest } from './strategies/adyenv2';
+
 export default interface Payment {
     methodId: string;
     gatewayId?: string;
     paymentData?: PaymentInstrument & PaymentInstrumentMeta;
 }
 
-export type PaymentInstrument = CreditCardInstrument | NonceInstrument | VaultedInstrument | CryptogramInstrument | HostedInstrument | ThreeDSVaultedInstrument | FormattedPayload<PaypalInstrument>;
+export type PaymentInstrument = CreditCardInstrument | NonceInstrument | VaultedInstrument | CryptogramInstrument | HostedInstrument | ThreeDSVaultedInstrument | FormattedPayload<PaypalInstrument> | FormattedPayload<AdyenV2Instrument>;
 
 export interface PaymentInstrumentMeta {
     deviceSessionId?: string;
@@ -77,6 +79,17 @@ export interface PaypalInstrument {
     paypal_account: {
         token: string;
         email: string | null;
+    };
+}
+export interface AdyenV2Instrument {
+    browser_info: BrowserInfoRequest;
+    credit_card_token?: {
+        token: string;
+    };
+    bigpay_token?: {
+        credit_card_number_confirmation?: string;
+        verification_value?: string;
+        token: string;
     };
 }
 

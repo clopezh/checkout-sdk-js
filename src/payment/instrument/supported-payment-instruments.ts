@@ -5,6 +5,10 @@ interface SupportedInstruments {
 }
 
 const supportedInstruments: SupportedInstruments = {
+    scheme_adyenv2: {
+        provider: 'scheme_adyenv2',
+        method: 'card',
+    },
     braintree: {
         provider: 'braintree',
         method: 'card',
