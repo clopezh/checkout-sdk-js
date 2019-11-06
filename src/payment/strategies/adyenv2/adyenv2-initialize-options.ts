@@ -1,12 +1,12 @@
 import { Omit } from '../../../common/types';
 
-import { AdyenCreditCardComponentOptions, AdyenThreeDS2Options } from './adyenv2';
+import { AdyenCreditCardComponentOptions, AdyenIdealComponentOptions, AdyenThreeDS2Options } from './adyenv2';
 
 /**
  * A set of options that are required to initialize the AdyenV2 payment method.
  *
  * Once AdyenV2 payment is initialized, credit card form fields, provided by the
- * payment provider as iFrames, will be inserted into the current page. These
+ * payment provider as IFrames, will be inserted into the current page. These
  * options provide a location and styling for each of the form fields.
  */
 export default interface AdyenV2PaymentInitializeOptions {
@@ -33,5 +33,5 @@ export default interface AdyenV2PaymentInitializeOptions {
     /**
      * Optional. Overwriting the default options
      */
-    options?: Omit<AdyenCreditCardComponentOptions, 'onChange'>;
+    options?: Omit<AdyenCreditCardComponentOptions, 'onChange'> | AdyenIdealComponentOptions;
 }

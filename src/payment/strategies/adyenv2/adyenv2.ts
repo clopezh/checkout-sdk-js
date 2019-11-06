@@ -1,3 +1,7 @@
+export interface AdyenComponentCallbacks {
+    onChange?(state: AdyenCardState): void;
+}
+
 export interface AdyenHostWindow extends Window {
     AdyenCheckout?: new(configuration: AdyenConfiguration) => AdyenCheckout;
 }
@@ -467,7 +471,14 @@ export interface AdyenComponent {
 
 export interface AdyenCheckout {
     create(type: string, componentOptions?: AdyenCreditCardComponentOptions |
-        ThreeDS2DeviceFingerprintComponentOptions | ThreeDS2ChallengeComponentOptions | AdyenCustomCardComponentOptions): AdyenComponent;
+        ThreeDS2DeviceFingerprintComponentOptions | ThreeDS2ChallengeComponentOptions | AdyenIdealComponentOptions | AdyenCustomCardComponentOptions): AdyenComponent;
+}
+
+export interface AdyenIdealComponentOptions {
+    /**
+     * Optional. Set to **false** to remove the bank logos from the iDEAL form.
+     */
+    showImage?: boolean;
 }
 
 export interface AdyenBaseCardComponentOptions {

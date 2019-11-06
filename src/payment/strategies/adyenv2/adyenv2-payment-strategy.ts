@@ -221,7 +221,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
         const { widgetSize } = this._getAdyenV2PaymentInitializeOptions().threeDS2Options;
 
         if (!widgetSize) {
-            return '01';
+            return '05';
         }
 
         return widgetSize;
