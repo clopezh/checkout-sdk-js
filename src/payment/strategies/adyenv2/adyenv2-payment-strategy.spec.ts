@@ -24,7 +24,7 @@ import PaymentRequestTransformer from '../../payment-request-transformer';
 import { getErrorPaymentResponseBody, getVaultedInstrument } from '../../payments.mock';
 
 import { AdyenV2PaymentStrategy, AdyenV2ScriptLoader, ThreeDS2ChallengeComponentOptions, ThreeDS2ComponentType, ThreeDS2DeviceFingerprintComponentOptions } from '.';
-import { AdyenCardState, AdyenCheckout, AdyenComponent } from './adyenv2';
+import { AdyenCardState, AdyenComponent } from './adyenv2';
 import { getAdyenCheckout, getAdyenInitializeOptions, getChallengeShopperError, getIdentifyShopperError, getIdentifyShopperErrorResponse, getInvalidCardState, getRedirectShopperError, getValidCardState, getValidChallengeResponse } from './adyenv2.mock';
 
 describe('AdyenV2PaymentStrategy', () => {
@@ -190,14 +190,15 @@ describe('AdyenV2PaymentStrategy', () => {
     });
 
     describe('#execute', () => {
-        const adyenCheckout: AdyenCheckout = getAdyenCheckout();
         const identifyShopperError = getIdentifyShopperError();
         const challengeShopperError = getChallengeShopperError();
         const redirectShopperError = getRedirectShopperError();
+        const adyenCheckout = getAdyenCheckout();
         let adyenComponent: AdyenComponent;
         let componentOptions: ThreeDS2DeviceFingerprintComponentOptions | ThreeDS2ChallengeComponentOptions;
         let options: PaymentInitializeOptions;
         let threeDS2Component: AdyenComponent;
+        let onLoad = () => {};
 
         beforeEach(() => {
             options = getAdyenInitializeOptions();
@@ -209,6 +210,8 @@ describe('AdyenV2PaymentStrategy', () => {
                             threeDS2Token: 'token',
                         },
                     });
+
+                    onLoad();
 
                     return;
                 }),
@@ -318,6 +321,14 @@ describe('AdyenV2PaymentStrategy', () => {
         });
 
         it('returns 3DS2 IdentifyShopper flow', async () => {
+            options = getAdyenInitializeOptions();
+
+            if (options.adyenv2) {
+                jest.spyOn(options.adyenv2.threeDS2Options, 'onLoad').mockImplementation(callback => {
+                    onLoad = callback;
+                });
+            }
+
             jest.spyOn(adyenCheckout, 'create')
                 .mockImplementationOnce(jest.fn(() => adyenComponent))
                 .mockImplementationOnce(jest.fn((_type, options) => {
@@ -517,6 +528,14 @@ describe('AdyenV2PaymentStrategy', () => {
         });
 
         it('returns 3DS2 ChallengeShopper flow', async () => {
+            options = getAdyenInitializeOptions();
+
+            if (options.adyenv2) {
+                jest.spyOn(options.adyenv2.threeDS2Options, 'onLoad').mockImplementation(callback => {
+                    onLoad = callback;
+                });
+            }
+
             jest.spyOn(adyenCheckout, 'create')
                 .mockImplementationOnce(jest.fn(() => adyenComponent))
                 .mockImplementationOnce(jest.fn((_type, options) => {
@@ -623,11 +642,14 @@ describe('AdyenV2PaymentStrategy', () => {
                     paymentData: getVaultedInstrument(),
                 },
             };
-            const options = { methodId: 'adyenv2' };
 
-            await strategy.execute(payload, options);
+            const executeOptions = { methodId: 'adyenv2' };
 
-            expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), options);
+            jest.spyOn(adyenV2ScriptLoader, 'load').mockReturnValue(Promise.resolve(adyenCheckout));
+
+            await strategy.execute(payload, executeOptions);
+
+            expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), executeOptions);
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(store.dispatch).toHaveBeenCalledWith(submitOrderAction);
             expect(store.dispatch).toHaveBeenCalledWith(submitPaymentAction);
