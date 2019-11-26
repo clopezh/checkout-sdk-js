@@ -1,4 +1,4 @@
-import { AdyenV2Instrument, FormattedPayload, PaymentInstrument, VaultedInstrument} from './payment';
+import { AdyenV2Instrument, FormattedPayload, PaymentInstrument, VaultedInstrument } from './payment';
 
 export default function isVaultedInstrument(instrument: PaymentInstrument): instrument is VaultedInstrument {
     const formattedPayload = (instrument as FormattedPayload<AdyenV2Instrument>).formattedPayload;
