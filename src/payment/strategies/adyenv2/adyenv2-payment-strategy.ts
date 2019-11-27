@@ -181,13 +181,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                         );
                 }
 
-                return new Promise(() => {
-                    this._formPoster.postForm(error.body.three_ds_result.acs_url, {
-                        PaReq: error.body.three_ds_result.payer_auth_request,
-                        TermUrl: error.body.three_ds_result.callback_url,
-                        MD: error.body.three_ds_result.merchant_data,
-                    });
-                });
+                return this._handleRedirect(error, payment.methodId);
             });
     }
 
@@ -267,6 +261,41 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             });
 
             challengeComponent.mount(`#${threeDS2Container}`);
+        });
+    }
+
+    private _handleRedirect(resultObject: any, paymentMethodId: string): Promise<any> {
+        return new Promise(() => {
+            if (!this._adyenCheckout) {
+                throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
+            }
+
+            switch (paymentMethodId) {
+                case 'ideal':
+                case 'giropay':
+                    const { onLoad } = this._getAdyenV2PaymentInitializeOptions().threeDS2Options;
+
+                    const adyenComponent = this._adyenCheckout
+                        .createFromAction(resultObject);
+
+                    const container = this._getAdyenV2PaymentInitializeOptions().threeDS2ContainerId;
+
+                    onLoad(() => {
+                        adyenComponent.unmount();
+                    });
+
+                    adyenComponent.mount(`#${container}`);
+
+                    break;
+                default:
+                    return new Promise(() => {
+                        this._formPoster.postForm(resultObject.body.three_ds_result.acs_url, {
+                            PaReq: resultObject.body.three_ds_result.payer_auth_request,
+                            TermUrl: resultObject.body.three_ds_result.callback_url,
+                            MD: resultObject.body.three_ds_result.merchant_data,
+                        });
+                    });
+            }
         });
     }
 

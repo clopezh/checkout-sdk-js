@@ -1,6 +1,5 @@
 import { RequestError } from '../../../common/error/errors';
 import { getResponse } from '../../../common/http-request/responses.mock';
-import { OrderRequestBody } from '../../../order';
 import { PaymentInitializeOptions } from '../../payment-request-options';
 import { getErrorPaymentResponseBody } from '../../payments.mock';
 
@@ -9,6 +8,13 @@ import { AdyenCardState, AdyenCheckout, AdyenConfiguration, ResultCode, ThreeDSR
 export function getAdyenCheckout(): AdyenCheckout {
     return {
         create: jest.fn(() => {
+            return {
+                mount: jest.fn(),
+                unmount: jest.fn(),
+            };
+        }),
+
+        createFromAction: jest.fn(() => {
             return {
                 mount: jest.fn(),
                 unmount: jest.fn(),
@@ -41,14 +47,6 @@ export function getAdyenInitializeOptions(): PaymentInitializeOptions {
                 onComplete: jest.fn(),
                 onLoad: jest.fn(),
             },
-        },
-    };
-}
-
-export function getAdyenOrderRequestBody(): OrderRequestBody {
-    return {
-        payment: {
-            methodId: 'adyenv2',
         },
     };
 }

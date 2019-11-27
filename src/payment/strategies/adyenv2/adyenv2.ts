@@ -472,6 +472,8 @@ export interface AdyenComponent {
 export interface AdyenCheckout {
     create(type: string, componentOptions?: AdyenCreditCardComponentOptions |
         ThreeDS2DeviceFingerprintComponentOptions | ThreeDS2ChallengeComponentOptions | AdyenIdealComponentOptions | AdyenCustomCardComponentOptions): AdyenComponent;
+
+    createFromAction(action: any): AdyenComponent;
 }
 
 export interface AdyenIdealComponentOptions {
