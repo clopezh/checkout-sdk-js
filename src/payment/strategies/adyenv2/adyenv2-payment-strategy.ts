@@ -12,7 +12,18 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
+import {
+    AdyenCardState,
+    AdyenCheckout,
+    AdyenComponent,
+    AdyenConfiguration,
+    AdyenV2PaymentMethodType,
+    AdyenError,
+    ResultCode,
+    ThreeDS2ComponentType,
+    ThreeDS2OnComplete,
+    ThreeDS2Result
+} from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
 
@@ -181,7 +192,17 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                         );
                 }
 
-                return this._handleRedirect(error, payment.methodId);
+                if (error.body.three_ds_result.code === ResultCode.RedirectShopper) {
+                    return new Promise(() => {
+                        this._formPoster.postForm(error.body.three_ds_result.acs_url, {
+                            PaReq: error.body.three_ds_result.payer_auth_request,
+                            TermUrl: error.body.three_ds_result.callback_url,
+                            MD: error.body.three_ds_result.merchant_data,
+                        });
+                    });
+                }
+
+               return this._handleRedirect(error, payment.methodId);
             });
     }
 
@@ -271,8 +292,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
             }
 
             switch (paymentMethodId) {
-                case 'ideal':
-                case 'giropay':
+                case AdyenV2PaymentMethodType.IDEAL:
                     const { onLoad } = this._getAdyenV2PaymentInitializeOptions().threeDS2Options;
 
                     const adyenComponent = this._adyenCheckout
