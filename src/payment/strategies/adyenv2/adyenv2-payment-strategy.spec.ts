@@ -538,6 +538,7 @@ describe('AdyenV2PaymentStrategy', () => {
             await strategy.execute(payload, executeOptions);
 
             expect(orderActionCreator.submitOrder).toHaveBeenCalledWith(omit(payload, 'payment'), executeOptions);
+            expect(adyenCheckout.create).toHaveBeenCalledTimes(3);
             expect(paymentActionCreator.submitPayment).toHaveBeenCalled();
             expect(store.dispatch).toHaveBeenCalledWith(submitOrderAction);
             expect(store.dispatch).toHaveBeenCalledWith(submitPaymentAction);
