@@ -12,7 +12,18 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
+import {
+    AdyenCardState,
+    AdyenCheckout,
+    AdyenComponent,
+    AdyenConfiguration,
+    AdyenError,
+    BrowserInfoRequest,
+    ResultCode,
+    ThreeDS2ComponentType,
+    ThreeDS2OnComplete,
+    ThreeDS2Result
+} from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
 
@@ -111,9 +122,14 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                     return this._store.dispatch(this._paymentActionCreator.submitPayment({
                         ...payment,
                         paymentData: {
-                            instrumentId: paymentData.instrumentId,
-                            ccCvv: encryptedSecurityCode,
-                            ccNumber: encryptedCardNumber,
+                            formattedPayload: {
+                                bigpay_token: {
+                                    credit_card_number_confirmation: encryptedCardNumber,
+                                    token: paymentData.instrumentId,
+                                    verification_value: encryptedSecurityCode,
+                                },
+                                browser_info: this._getBrowserInfo(),
+                            },
                         },
                     }));
                 }
@@ -121,12 +137,17 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                 const paymentPayload = {
                     methodId: payment.methodId,
                     paymentData: {
-                        nonce: JSON.stringify({
-                            ...adyenComponentState.data.paymentMethod,
-                            origin: window.location.origin,
-                        }),
-                        shouldSaveInstrument,
+                        formattedPayload: {
+                            credit_card_token: {
+                                token: JSON.stringify({
+                                    ...adyenComponentState.data.paymentMethod,
+                                    origin: window.location.origin,
+                                }),
+                            },
+                            browser_info: this._getBrowserInfo(),
+                        },
                     },
+                    shouldSaveInstrument,
                 };
 
                 return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
@@ -314,5 +335,16 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
 
     private _updateAdyenComponentState(newState: AdyenCardState) {
         this._adyenComponentState = newState;
+    }
+
+    private _getBrowserInfo(): BrowserInfoRequest {
+        return {
+            language: navigator.language || navigator.languages[0],
+            color_depth: screen.colorDepth,
+            screen_height: screen.height,
+            screen_width: screen.width,
+            time_zone_offset: new Date().getTimezoneOffset().toString(),
+            java_enabled: navigator.javaEnabled(),
+        };
     }
 }
