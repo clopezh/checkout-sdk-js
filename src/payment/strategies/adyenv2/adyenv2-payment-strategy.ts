@@ -12,20 +12,10 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import {
-    AdyenCardState,
-    AdyenCheckout,
-    AdyenComponent,
-    AdyenConfiguration,
-    AdyenV2PaymentMethodType,
-    AdyenError,
-    ResultCode,
-    ThreeDS2ComponentType,
-    ThreeDS2OnComplete,
-    ThreeDS2Result
-} from './adyenv2';
+import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, AdyenV2Action, AdyenV2PaymentMethodType, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
+import isActionLike from './is-action-like';
 
 export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
@@ -192,7 +182,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                         );
                 }
 
-                if (error.body.three_ds_result.code === ResultCode.RedirectShopper) {
+                if (payment.methodId === AdyenV2PaymentMethodType.Scheme || payment.methodId === AdyenV2PaymentMethodType.BCMC) {
                     return new Promise(() => {
                         this._formPoster.postForm(error.body.three_ds_result.acs_url, {
                             PaReq: error.body.three_ds_result.payer_auth_request,
@@ -202,7 +192,9 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                     });
                 }
 
-               return this._handleRedirect(error, payment.methodId);
+                if (isActionLike(error)) {
+                    return this._handleFromAction(error, payment.methodId);
+                }
             });
     }
 
@@ -285,36 +277,21 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
         });
     }
 
-    private _handleRedirect(resultObject: any, paymentMethodId: string): Promise<any> {
+    private _handleFromAction(action: AdyenV2Action, paymentMethodId: string): Promise<any> {
         return new Promise(() => {
             if (!this._adyenCheckout) {
                 throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
             }
 
-            switch (paymentMethodId) {
-                case AdyenV2PaymentMethodType.IDEAL:
-                    const { onLoad } = this._getAdyenV2PaymentInitializeOptions().threeDS2Options;
-
-                    const adyenComponent = this._adyenCheckout
-                        .createFromAction(resultObject);
-
-                    const container = this._getAdyenV2PaymentInitializeOptions().threeDS2ContainerId;
-
-                    onLoad(() => {
-                        adyenComponent.unmount();
-                    });
-
-                    adyenComponent.mount(`#${container}`);
-
-                    break;
-                default:
-                    return new Promise(() => {
-                        this._formPoster.postForm(resultObject.body.three_ds_result.acs_url, {
-                            PaReq: resultObject.body.three_ds_result.payer_auth_request,
-                            TermUrl: resultObject.body.three_ds_result.callback_url,
-                            MD: resultObject.body.three_ds_result.merchant_data,
-                        });
-                    });
+            if (paymentMethodId === AdyenV2PaymentMethodType.IDEAL) {
+                const { onLoad } = this._getAdyenV2PaymentInitializeOptions().threeDS2Options;
+                const adyenComponent = this._adyenCheckout
+                    .createFromAction(action);
+                const container = this._getAdyenV2PaymentInitializeOptions().threeDS2ContainerId;
+                onLoad(() => {
+                    adyenComponent.unmount();
+                });
+                adyenComponent.mount(`#${container}`);
             }
         });
     }

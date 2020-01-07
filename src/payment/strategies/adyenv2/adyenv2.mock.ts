@@ -1,9 +1,25 @@
 import { RequestError } from '../../../common/error/errors';
 import { getResponse } from '../../../common/http-request/responses.mock';
+import { OrderPaymentRequestBody, OrderRequestBody } from '../../../order';
+import Payment from '../../payment';
 import { PaymentInitializeOptions } from '../../payment-request-options';
-import { getErrorPaymentResponseBody } from '../../payments.mock';
+import { getCreditCardInstrument, getErrorPaymentResponseBody } from '../../payments.mock';
 
-import { AdyenCardState, AdyenCheckout, AdyenConfiguration, ResultCode, ThreeDSRequiredErrorResponse } from './adyenv2';
+import { AdyenCardState,  AdyenCheckout, AdyenConfiguration, AdyenV2PaymentMethodType, ResultCode, ThreeDSRequiredErrorResponse } from './adyenv2';
+
+export function getOrderRequestBody(): OrderRequestBody {
+    return {
+        useStoreCredit: false,
+        payment: getPayment() as OrderPaymentRequestBody,
+    };
+}
+
+export function getPayment(): Payment {
+    return {
+        methodId: 'scheme',
+        paymentData: getCreditCardInstrument(),
+    };
+}
 
 export function getAdyenCheckout(): AdyenCheckout {
     return {
@@ -43,7 +59,7 @@ export function getAdyenInitializeOptions(): PaymentInitializeOptions {
                 placeholders: {},
             },
             threeDS2Options: {
-                widgetSize: '1',
+                widgetSize: '05',
                 onComplete: jest.fn(),
                 onLoad: jest.fn(),
             },
@@ -59,7 +75,7 @@ function getCardState() {
                 encryptedExpiryMonth: 'EXPIRY_MONTH',
                 encryptedExpiryYear: 'EXPIRY_YEAR',
                 encryptedSecurityCode: 'CVV',
-                type: 'scheme',
+                type: AdyenV2PaymentMethodType.Scheme,
             },
         },
     };
@@ -120,6 +136,7 @@ export function getIdentifyShopperErrorResponse(): ThreeDSRequiredErrorResponse 
         status: 'error',
     };
 }
+
 export function getIdentifyShopperError(): RequestError {
     return new RequestError(getResponse({
         ...getErrorPaymentResponseBody(),

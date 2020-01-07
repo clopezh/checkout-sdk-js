@@ -699,46 +699,46 @@ export interface ThreeDSRequiredErrorResponse {
 
 export enum AdyenV2HTTPMethod {
     GET = 'GET',
-    POST = 'POST'
+    POST = 'POST',
 }
 
 export enum AdyenV2PaymentMethodType {
     Scheme = 'scheme',
     BCMC = 'bcmc',
-    IDEAL = 'ideal'
+    IDEAL = 'ideal',
 }
 
 export interface Action {
-    method: AdyenV2HTTPMethod,
+    method: AdyenV2HTTPMethod;
 
     /**
      * Value that you need to submit in your /payments/details request when handling
      * the redirect.
      */
-    paymentData: string,
+    paymentData: string;
 
-    paymentMethodType: AdyenV2PaymentMethodType,
-    type: string,
+    paymentMethodType: AdyenV2PaymentMethodType;
+    type: string;
 
     /**
      * The HTTP request method that you should use. After the shopper completes the payment,
      * they will be redirected back to your returnURL using the same method.
      */
-    url: string
+    url: string;
 }
 
 export interface AdyenV2Action {
-    resultCode: ResultCode,
+    resultCode: ResultCode;
 
     /**
      * Object containing information about the redirect.
      */
-    action: Action,
+    action: Action;
 
     /**
      * Array that contains the key parameter name and the corresponding data type that you
      * should expect when the shopper is redirected to your returnURL. You need to submit
      * this value in your /payments/details request when handling the redirect.
      */
-    details: InputDetail[]
+    details: InputDetail[];
 }
