@@ -1,29 +1,53 @@
-import { createClient as createPaymentClient } from '@bigcommerce/bigpay-client';
-import { createAction, createErrorAction } from '@bigcommerce/data-store';
-import { createFormPoster, FormPoster } from '@bigcommerce/form-poster';
-import { createRequestSender } from '@bigcommerce/request-sender';
-import { createScriptLoader, createStylesheetLoader } from '@bigcommerce/script-loader';
-import { omit } from 'lodash';
-import { of, Observable } from 'rxjs';
+import {createClient as createPaymentClient} from '@bigcommerce/bigpay-client';
+import {createAction, createErrorAction} from '@bigcommerce/data-store';
+import {createFormPoster, FormPoster} from '@bigcommerce/form-poster';
+import {createRequestSender} from '@bigcommerce/request-sender';
+import {createScriptLoader, createStylesheetLoader} from '@bigcommerce/script-loader';
+import {omit} from 'lodash';
+import {Observable, of} from 'rxjs';
 
-import { createCheckoutStore, CheckoutRequestSender, CheckoutStore, CheckoutValidator } from '../../../checkout';
-import { getCheckoutStoreState } from '../../../checkout/checkouts.mock';
-import { InvalidArgumentError, MissingDataError, NotInitializedError, RequestError } from '../../../common/error/errors';
-import { getResponse } from '../../../common/http-request/responses.mock';
-import { FinalizeOrderAction, OrderActionCreator, OrderActionType, OrderRequestSender, SubmitOrderAction } from '../../../order';
-import { OrderFinalizationNotRequiredError } from '../../../order/errors';
-import { PaymentInitializeOptions } from '../../../payment';
-import { PaymentArgumentInvalidError } from '../../errors';
+import {CheckoutRequestSender, CheckoutStore, CheckoutValidator, createCheckoutStore} from '../../../checkout';
+import {getCheckoutStoreState} from '../../../checkout/checkouts.mock';
+import {InvalidArgumentError, MissingDataError, NotInitializedError, RequestError} from '../../../common/error/errors';
+import {getResponse} from '../../../common/http-request/responses.mock';
+import {
+    FinalizeOrderAction,
+    OrderActionCreator,
+    OrderActionType,
+    OrderRequestSender,
+    SubmitOrderAction
+} from '../../../order';
+import {OrderFinalizationNotRequiredError} from '../../../order/errors';
+import {PaymentInitializeOptions} from '../../../payment';
+import {PaymentArgumentInvalidError} from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
-import { PaymentActionType, SubmitPaymentAction } from '../../payment-actions';
-import { getAdyenV2 } from '../../payment-methods.mock';
+import {PaymentActionType, SubmitPaymentAction} from '../../payment-actions';
+import {getAdyenV2} from '../../payment-methods.mock';
 import PaymentRequestSender from '../../payment-request-sender';
 import PaymentRequestTransformer from '../../payment-request-transformer';
-import { getErrorPaymentResponseBody, getVaultedInstrument } from '../../payments.mock';
+import {getErrorPaymentResponseBody, getVaultedInstrument} from '../../payments.mock';
 
-import { AdyenV2PaymentStrategy, AdyenV2ScriptLoader, ThreeDS2ChallengeComponentOptions, ThreeDS2ComponentType, ThreeDS2DeviceFingerprintComponentOptions } from '.';
-import { AdyenCardState, AdyenCheckout, AdyenComponent } from './adyenv2';
-import { getAdyenCheckout, getAdyenInitializeOptions, getChallengeShopperError, getIdentifyShopperError, getIdentifyShopperErrorResponse, getInvalidCardState, getOrderRequestBody, getRedirectShopperError, getValidCardState, getValidChallengeResponse } from './adyenv2.mock';
+import {
+    AdyenV2PaymentMethodType,
+    AdyenV2PaymentStrategy,
+    AdyenV2ScriptLoader,
+    ThreeDS2ChallengeComponentOptions,
+    ThreeDS2ComponentType,
+    ThreeDS2DeviceFingerprintComponentOptions
+} from '.';
+import {AdyenCardState, AdyenCheckout, AdyenComponent} from './adyenv2';
+import {
+    getAdyenCheckout,
+    getAdyenInitializeOptions,
+    getChallengeShopperError,
+    getIdentifyShopperError,
+    getIdentifyShopperErrorResponse,
+    getInvalidCardState,
+    getOrderRequestBody,
+    getRedirectShopperError,
+    getValidCardState,
+    getValidChallengeResponse
+} from './adyenv2.mock';
 
 describe('AdyenV2PaymentStrategy', () => {
     let finalizeOrderAction: Observable<FinalizeOrderAction>;
@@ -528,15 +552,11 @@ describe('AdyenV2PaymentStrategy', () => {
                 .mockReturnValue(of(createErrorAction(PaymentActionType.SubmitPaymentFailed, redirectShopperError)));
 
             await strategy.initialize(options);
-            strategy.execute(getOrderRequestBody());
+            strategy.execute(getOrderRequestBody(AdyenV2PaymentMethodType.IDEAL));
 
             await new Promise(resolve => process.nextTick(resolve));
 
-            expect(formPoster.postForm).toHaveBeenCalledWith('https://acs/url', {
-                PaReq: 'payer_auth_request',
-                TermUrl: 'https://callback/url',
-                MD: 'merchant_data',
-            });
+            expect(adyenCheckout.create).toHaveBeenCalledTimes(2);
         });
 
         it('submits payment with a vaulted instrument', async () => {

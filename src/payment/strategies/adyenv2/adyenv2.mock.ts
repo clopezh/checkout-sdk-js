@@ -7,16 +7,16 @@ import { getCreditCardInstrument, getErrorPaymentResponseBody } from '../../paym
 
 import { AdyenCardState,  AdyenCheckout, AdyenConfiguration, AdyenV2PaymentMethodType, ResultCode, ThreeDSRequiredErrorResponse } from './adyenv2';
 
-export function getOrderRequestBody(): OrderRequestBody {
+export function getOrderRequestBody(paymentMethodType: AdyenV2PaymentMethodType = AdyenV2PaymentMethodType.Scheme): OrderRequestBody {
     return {
         useStoreCredit: false,
-        payment: getPayment() as OrderPaymentRequestBody,
+        payment: getPayment(paymentMethodType) as OrderPaymentRequestBody,
     };
 }
 
-export function getPayment(): Payment {
+function getPayment(paymentMethodType: AdyenV2PaymentMethodType): Payment {
     return {
-        methodId: 'scheme',
+        methodId: paymentMethodType,
         paymentData: getCreditCardInstrument(),
     };
 }
