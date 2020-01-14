@@ -12,19 +12,7 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import {
-    AdyenCardState,
-    AdyenCheckout,
-    AdyenComponent,
-    AdyenConfiguration,
-    AdyenError,
-    AdyenV2Action,
-    AdyenV2PaymentMethodType,
-    ResultCode,
-    ThreeDS2ComponentType,
-    ThreeDS2OnComplete,
-    ThreeDS2Result
-} from './adyenv2';
+import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, AdyenV2Action, AdyenV2PaymentMethodType, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
 
