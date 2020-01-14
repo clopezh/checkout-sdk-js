@@ -603,6 +603,7 @@ export enum ResultCode {
     Received = 'Received',
     RedirectShopper = 'RedirectShopper',
     Refused = 'Refused',
+    BankTransferRequired = 'BankTransferRequired',
 }
 
 export interface ThreeDS2ChallengeComponentOptions {
@@ -708,7 +709,7 @@ export enum AdyenV2PaymentMethodType {
     IDEAL = 'ideal',
 }
 
-export interface Action {
+export interface AdyenV2Action {
     method: AdyenV2HTTPMethod;
 
     /**
@@ -725,20 +726,6 @@ export interface Action {
      * they will be redirected back to your returnURL using the same method.
      */
     url: string;
-}
 
-export interface AdyenV2Action {
-    resultCode: ResultCode;
-
-    /**
-     * Object containing information about the redirect.
-     */
-    action: Action;
-
-    /**
-     * Array that contains the key parameter name and the corresponding data type that you
-     * should expect when the shopper is redirected to your returnURL. You need to submit
-     * this value in your /payments/details request when handling the redirect.
-     */
-    details: InputDetail[];
+    action: string;
 }

@@ -12,10 +12,21 @@ import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import { AdyenCardState, AdyenCheckout, AdyenComponent, AdyenConfiguration, AdyenError, AdyenV2Action, AdyenV2PaymentMethodType, ResultCode, ThreeDS2ComponentType, ThreeDS2OnComplete, ThreeDS2Result } from './adyenv2';
+import {
+    AdyenCardState,
+    AdyenCheckout,
+    AdyenComponent,
+    AdyenConfiguration,
+    AdyenError,
+    AdyenV2Action,
+    AdyenV2PaymentMethodType,
+    ResultCode,
+    ThreeDS2ComponentType,
+    ThreeDS2OnComplete,
+    ThreeDS2Result
+} from './adyenv2';
 import AdyenV2PaymentInitializeOptions from './adyenv2-initialize-options';
 import AdyenV2ScriptLoader from './adyenv2-script-loader';
-import isActionLike from './is-action-like';
 
 export default class AdyenV2PaymentStrategy implements PaymentStrategy {
     private _adyenCheckout?: AdyenCheckout;
@@ -133,7 +144,7 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                 return this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
             })
             .catch(error => {
-                if (!(error instanceof RequestError) || !some(error.body.errors, { code: 'three_d_secure_required' })) {
+                if (!(error instanceof RequestError) || (!some(error.body.errors, { code: 'three_d_secure_required' }) && !some(error.body.errors, { code: 'BankTransferRequired' }))) {
                     return Promise.reject(error);
                 }
 
@@ -192,8 +203,8 @@ export default class AdyenV2PaymentStrategy implements PaymentStrategy {
                     });
                 }
 
-                if (isActionLike(error)) {
-                    return this._handleFromAction(error, payment.methodId);
+                if (some(error.body.errors, { code: ResultCode.BankTransferRequired })) {
+                    return this._handleFromAction(JSON.parse(error.body.errors[0].message), payment.methodId);
                 }
             });
     }
