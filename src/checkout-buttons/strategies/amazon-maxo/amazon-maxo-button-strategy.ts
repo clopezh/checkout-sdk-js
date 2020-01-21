@@ -35,7 +35,6 @@ export default class AmazonMaxoButtonStrategy implements CheckoutButtonStrategy 
             });
     }
 
-
     deinitialize(): Promise<void> {
         if (this._walletButton && this._walletButton.parentNode) {
             this._walletButton.parentNode.removeChild(this._walletButton);
@@ -51,11 +50,11 @@ export default class AmazonMaxoButtonStrategy implements CheckoutButtonStrategy 
         if (!this._methodId) {
             throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
         }
-        
+
         const state = this._store.getState();
         const paymentMethod =  state.paymentMethods.getPaymentMethod(this._methodId);
 
-        if(! paymentMethod ){
+        if (! paymentMethod ) {
             throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
         }
 
