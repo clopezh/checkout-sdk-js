@@ -112,6 +112,13 @@ declare interface AdyenCreditCardComponentOptions extends AdyenBaseCardComponent
     placeholders?: CreditCardPlaceHolder | SepaPlaceHolder;
 }
 
+declare interface AdyenIdealComponentOptions {
+    /**
+     * Optional. Set to **false** to remove the bank logos from the iDEAL form.
+     */
+    showImage?: boolean;
+}
+
 declare interface AdyenStyleOptions {
     /**
      * Base styling applied to the iframe. All styling extends from this style.
@@ -151,7 +158,7 @@ declare interface AdyenThreeDS2Options {
  * A set of options that are required to initialize the AdyenV2 payment method.
  *
  * Once AdyenV2 payment is initialized, credit card form fields, provided by the
- * payment provider as iFrames, will be inserted into the current page. These
+ * payment provider as IFrames, will be inserted into the current page. These
  * options provide a location and styling for each of the form fields.
  */
 declare interface AdyenV2PaymentInitializeOptions {
@@ -174,7 +181,7 @@ declare interface AdyenV2PaymentInitializeOptions {
     /**
      * Optional. Overwriting the default options
      */
-    options?: Omit<AdyenCreditCardComponentOptions, 'onChange'>;
+    options?: Omit<AdyenCreditCardComponentOptions, 'onChange'> | AdyenIdealComponentOptions;
 }
 
 /**
