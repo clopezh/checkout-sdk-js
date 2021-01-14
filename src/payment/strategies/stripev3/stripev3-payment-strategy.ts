@@ -1,16 +1,9 @@
 import { some } from 'lodash';
 
 import { Address } from '../../../address';
-import { BillingAddress, isBillingAddressLike } from '../../../billing';
+import { isBillingAddressLike, BillingAddress } from '../../../billing';
 import { CheckoutStore, InternalCheckoutSelectors } from '../../../checkout';
-import {
-    InvalidArgumentError,
-    MissingDataError,
-    MissingDataErrorType,
-    NotInitializedError,
-    NotInitializedErrorType,
-    RequestError
-} from '../../../common/error/errors';
+import { InvalidArgumentError, MissingDataError, MissingDataErrorType, NotInitializedError, NotInitializedErrorType, RequestError } from '../../../common/error/errors';
 import { Customer } from '../../../customer';
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
@@ -25,27 +18,7 @@ import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
 import PaymentStrategy from '../payment-strategy';
 
-import isIndividualCardElementOptions, {
-    PaymentIntent,
-    PaymentMethod as StripePaymentMethod,
-    StripeAdditionalAction,
-    StripeAdditionalActionError,
-    StripeAddress,
-    StripeBillingDetails,
-    StripeCardElements,
-    StripeConfirmCardPaymentData,
-    StripeConfirmIdealPaymentData,
-    StripeConfirmPaymentData,
-    StripeConfirmSepaPaymentData,
-    StripeElement,
-    StripeElementOptions,
-    StripeElements,
-    StripeElementType,
-    StripeError,
-    StripePaymentMethodType,
-    StripeShippingAddress,
-    StripeV3Client
-} from './stripev3';
+import isIndividualCardElementOptions, { PaymentIntent, PaymentMethod as StripePaymentMethod, StripeAdditionalAction, StripeAdditionalActionError, StripeAddress, StripeBillingDetails, StripeCardElements, StripeConfirmCardPaymentData, StripeConfirmIdealPaymentData, StripeConfirmPaymentData, StripeConfirmSepaPaymentData, StripeElement, StripeElements, StripeElementOptions, StripeElementType, StripeError, StripePaymentMethodType, StripeShippingAddress, StripeV3Client } from './stripev3';
 import StripeV3PaymentInitializeOptions from './stripev3-initialize-options';
 import StripeV3ScriptLoader from './stripev3-script-loader';
 
@@ -187,7 +160,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                                 },
                                 confirm: true,
                                 vault_payment_instrument: shouldSaveInstrument,
-                            }
+                            },
                         },
                     };
 
@@ -215,7 +188,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
             switch (paymentMethod.method) {
                 case StripeElementType.Alipay:
                     ({error, paymentIntent} = await this._getStripeJs().confirmAlipayPayment(
-                        clientSecret, { return_url: returnUrl }, { handleActions: false }));
+                        clientSecret, { return_url: returnUrl }, { handleActions: false } ));
 
                     break;
 
@@ -229,7 +202,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                         {
                             type: StripePaymentMethodType.CreditCard,
                             card: element,
-                            billing_details: billingDetails
+                            billing_details: billingDetails,
                         })
                     );
 
@@ -253,7 +226,7 @@ export default class StripeV3PaymentStrategy implements PaymentStrategy {
                 reject(error);
             }
 
-            if (paymentMethod.method == StripeElementType.CreditCard) {
+            if (paymentMethod.method === StripeElementType.CreditCard) {
                 resolve(stripePaymentMethod);
             }
 

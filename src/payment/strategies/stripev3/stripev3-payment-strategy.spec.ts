@@ -28,19 +28,7 @@ import { getErrorPaymentResponseBody } from '../../payments.mock';
 import { StripeElement, StripeElements, StripeElementType, StripePaymentMethodType, StripeV3Client } from './stripev3';
 import StripeV3PaymentStrategy from './stripev3-payment-strategy';
 import StripeV3ScriptLoader from './stripev3-script-loader';
-import {
-    getConfirmPaymentResponse,
-    getFailingStripeV3JsMock,
-    getPaymentMethodResponse,
-    getStripeBillingAddress,
-    getStripeBillingAddressWithoutPhone,
-    getStripePaymentMethodOptionsWithGuestUserWithoutAddress,
-    getStripeV3InitializeOptionsMock,
-    getStripeV3InitializeOptionsMockSingleElements,
-    getStripeV3JsMock,
-    getStripeV3OrderRequestBodyMock,
-    getStripeV3OrderRequestBodyVaultMock
-} from './stripev3.mock';
+import { getConfirmPaymentResponse, getFailingStripeV3JsMock, getPaymentMethodResponse, getStripeBillingAddress, getStripeBillingAddressWithoutPhone, getStripePaymentMethodOptionsWithGuestUserWithoutAddress, getStripeV3InitializeOptionsMock, getStripeV3InitializeOptionsMockSingleElements, getStripeV3JsMock, getStripeV3OrderRequestBodyMock, getStripeV3OrderRequestBodyVaultMock } from './stripev3.mock';
 
 describe('StripeV3PaymentStrategy', () => {
     let checkoutMock: Checkout;

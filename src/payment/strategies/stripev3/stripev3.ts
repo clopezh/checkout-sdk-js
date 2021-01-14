@@ -795,7 +795,7 @@ export interface StripeV3Client {
      * may be used or required by particular types of payment methods.
      */
     createPaymentMethod(
-        params: createPaymentMethodParams
+        params: CreatePaymentMethodParams
     ): Promise<{paymentMethod?: PaymentMethod; error?: StripeError}>;
 
     /**
@@ -810,7 +810,7 @@ export interface StripeV3Client {
     ): Promise<{paymentIntent?: PaymentIntent; error?: StripeError}>;
 }
 
-export interface createPaymentMethodParams {
+export interface CreatePaymentMethodParams {
     type: StripePaymentMethodType;
     card: StripeElement;
     billing_details?: StripeBillingDetails;
