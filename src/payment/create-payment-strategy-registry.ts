@@ -40,6 +40,7 @@ import { CyberSourcePaymentStrategy } from './strategies/cybersource/index';
 import { CyberSourceV2PaymentStrategy } from './strategies/cybersourcev2';
 import { ExternalPaymentStrategy } from './strategies/external';
 import { createGooglePayPaymentProcessor, GooglePayAdyenV2Initializer, GooglePayAdyenV2PaymentProcessor, GooglePayAuthorizeNetInitializer, GooglePayBraintreeInitializer, GooglePayCheckoutcomInitializer, GooglePayPaymentStrategy, GooglePayStripeInitializer } from './strategies/googlepay';
+import { DigitalRiverPaymentStrategy, DigitalRiverScriptLoader } from './strategies/digital-river';
 import { KlarnaPaymentStrategy, KlarnaScriptLoader } from './strategies/klarna';
 import { KlarnaV2PaymentStrategy, KlarnaV2ScriptLoader } from './strategies/klarnav2';
 import { LegacyPaymentStrategy } from './strategies/legacy';
@@ -246,6 +247,13 @@ export default function createPaymentStrategyRegistry(
                 paymentActionCreator,
                 new CardinalClient(new CardinalScriptLoader(scriptLoader))
             )
+        )
+    );
+
+    registry.register(PaymentStrategyType.DIGITALRIVER, () =>
+        new DigitalRiverPaymentStrategy(
+            store,
+            new DigitalRiverScriptLoader(scriptLoader, getStylesheetLoader())
         )
     );
 

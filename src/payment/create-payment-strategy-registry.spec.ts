@@ -147,6 +147,11 @@ describe('CreatePaymentStrategyRegistry', () => {
         expect(paymentStrategy).toBeInstanceOf(CyberSourceV2PaymentStrategy);
     });
 
+    it('can instantiate digitalRiver', () => {
+        const paymentStrategy = registry.get(PaymentStrategyType.DIGITALRIVER);
+        expect(paymentStrategy).toBeInstanceOf(CyberSourceV2PaymentStrategy);
+    });
+
     it('can instantiate klarna', () => {
         const paymentStrategy = registry.get(PaymentStrategyType.KLARNA);
         expect(paymentStrategy).toBeInstanceOf(KlarnaPaymentStrategy);
