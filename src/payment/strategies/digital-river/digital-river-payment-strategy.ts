@@ -6,6 +6,7 @@ import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-r
 import PaymentStrategy from '../payment-strategy';
 
 import DigitalRiverJS, { DigitalRiverDropIn } from './digital-river';
+import DigitalRiverPaymentInitializeOptions from './digital-river-payment-initialize-options';
 import DigitalRiverScriptLoader from './digital-river-script-loader';
 
 export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
@@ -20,9 +21,12 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
 
     async initialize(options: PaymentInitializeOptions): Promise<InternalCheckoutSelectors> {
         this._initializeOptions = options;
+
         this._digitalRiverJS = await this._digitalRiverScriptLoader.load();
-        this._digitalRiverDropComponent = await this._getDigitalRiverJs().createDropIn(this._getInitializeOptions().digitalriver && this._getInitializeOptions().digitalriver.configuration );
-        await this._digitalRiverDropComponent.mount(this._getInitializeOptions().digitalriver && this._getInitializeOptions().digitalriver.container);
+        this._digitalRiverDropComponent = await this._getDigitalRiverJs().createDropIn(this._getDigitalRiverInitializeOptions().configuration );
+
+        await this._digitalRiverDropComponent.mount(this._getDigitalRiverInitializeOptions().container);
+
         return this._store.getState();
     }
 
@@ -34,7 +38,8 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
         if (!payload.payment || options) {
             throw new InvalidArgumentError('Unable to proceed because "payload.payment" argument is not provided.');
         }
-        //TODO.....
+
+        // TODO.....
        // const { payment: { paymentData, ...paymentPayload } } = payload;
         return Promise.resolve(this._store.getState());
     }
@@ -44,9 +49,10 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
     }
 
     private _getDigitalRiverJs(): DigitalRiverJS {
-        if(!this._digitalRiverJS){
+        if (!this._digitalRiverJS){
             throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
         }
+
         return this._digitalRiverJS;
     }
 
@@ -54,9 +60,18 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
         if (!this._initializeOptions) {
             throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
         }
+
         return this._initializeOptions;
     }
 
+    private _getDigitalRiverInitializeOptions(): DigitalRiverPaymentInitializeOptions {
+        const { digitalriver } = this._getInitializeOptions();
 
+        if (!digitalriver) {
+            throw new InvalidArgumentError('Unable to initialize payment because "options.stripev3" argument is not provided.');
+        }
+
+        return digitalriver;
+    }
 
 }
