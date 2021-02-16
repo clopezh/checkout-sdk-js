@@ -11,6 +11,7 @@ import DigitalRiverScriptLoader from './digital-river-script-loader';
 export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
     private _digitalRiverJS?: DigitalRiverJS;
     private _digitalRiverDropComponent?: DigitalRiverDropIn;
+    private _initializeOptions?: PaymentInitializeOptions;
 
     constructor(
         private _store: CheckoutStore,
@@ -18,10 +19,10 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
     ) {}
 
     async initialize(options: PaymentInitializeOptions): Promise<InternalCheckoutSelectors> {
-
+        this._initializeOptions = options;
         this._digitalRiverJS = await this._digitalRiverScriptLoader.load();
-        this._digitalRiverDropComponent = await this._getDigitalRiverJs().createDropIn(options.digitalriver && options.digitalriver.configuration);
-        await this._digitalRiverDropComponent.mount(options.digitalriver && options.digitalriver.container);
+        this._digitalRiverDropComponent = await this._getDigitalRiverJs().createDropIn(this._getInitializeOptions().digitalriver && this._getInitializeOptions().digitalriver.configuration );
+        await this._digitalRiverDropComponent.mount(this._getInitializeOptions().digitalriver && this._getInitializeOptions().digitalriver.container);
         return this._store.getState();
     }
 
@@ -48,5 +49,14 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
         }
         return this._digitalRiverJS;
     }
+
+    private _getInitializeOptions(): PaymentInitializeOptions {
+        if (!this._initializeOptions) {
+            throw new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized);
+        }
+        return this._initializeOptions;
+    }
+
+
 
 }
