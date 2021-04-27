@@ -15,6 +15,7 @@ import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { getOrderRequestBody } from '../../../order/internal-orders.mock';
 import { createSpamProtection, PaymentHumanVerificationHandler } from '../../../spam-protection';
 import { StoreCreditActionCreator, StoreCreditActionType, StoreCreditRequestSender } from '../../../store-credit';
+import { PaymentArgumentInvalidError } from '../../errors';
 import PaymentActionCreator from '../../payment-action-creator';
 import { PaymentActionType, SubmitPaymentAction } from '../../payment-actions';
 import PaymentMethod from '../../payment-method';
@@ -260,6 +261,7 @@ describe('DigitalRiverPaymentStrategy', () => {
         let onSuccessCallback: (data: OnSuccessResponse) => {};
         const digitalRiverLoadResponse = getDigitalRiverJSMock();
         const digitalRiverComponent = digitalRiverLoadResponse.createDropin(expect.any(Object));
+        const readyForStorage = true;
 
         beforeEach(() => {
             jest.spyOn(digitalRiverScriptLoader, 'load').mockReturnValue(Promise.resolve(digitalRiverLoadResponse));
@@ -269,15 +271,9 @@ describe('DigitalRiverPaymentStrategy', () => {
                 .mockReturnValue(submitOrderAction);
             options = getInitializeOptionsMock();
             payload = merge({}, getOrderRequestBody(), {
+                useStoreCredit: false,
                 payment: {
-                    useStoreCredit: false,
-                    order: {
-                        order: 'fake',
-                    },
-                    payment: {
-                        methodId: 'digitalriver',
-                        paymentData: {instrumentId: '123', shouldSetAsDefaultInstrument: true},
-                    },
+                    methodId: 'digitalriver',
                 },
             });
         });
@@ -295,28 +291,33 @@ describe('DigitalRiverPaymentStrategy', () => {
                     id: '1',
                     reusable: false,
                 },
-                readyForStorage: true,
+                readyForStorage,
             });
 
             expect(await strategy.execute(payload)).toEqual(store.getState());
             expect(orderActionCreator.submitOrder).toHaveBeenCalled();
             expect(paymentMethodActionCreator.loadPaymentMethod).toHaveBeenCalled();
-            expect(storeCreditActionCreator.applyStoreCredit).toHaveBeenCalledWith(false);
             expect(await paymentActionCreator.submitPayment).toHaveBeenCalledWith(
                 {
-                    methodId: 'authorizenet',
+                    methodId: 'digitalriver',
                     paymentData: {
-                        nonce: JSON.stringify({
-                            checkoutId: '12345676543',
-                            source: {
-                                source: {
-                                    id: '1',
-                                    reusable: false,
-                                },
-                                readyForStorage: true,
+                        formattedPayload: {
+                            credit_card_token: {
+                                token: JSON.stringify({
+                                    checkoutId: '12345676543',
+                                    source: {
+                                        source: {
+                                            id: '1',
+                                            reusable: false,
+                                        },
+                                        readyForStorage: true,
+                                    },
+                                    sessionId: '1234',
+                                }),
                             },
-                            sessionId: '1234',
-                        }),
+                            vault_payment_instrument: readyForStorage,
+                            set_as_default_stored_instrument: false,
+                        },
                     },
                 }
             );
@@ -335,7 +336,7 @@ describe('DigitalRiverPaymentStrategy', () => {
                     id: '1',
                     reusable: false,
                 },
-                readyForStorage: true,
+                readyForStorage,
             });
 
             checkoutMock.isStoreCreditApplied = true;
@@ -346,31 +347,93 @@ describe('DigitalRiverPaymentStrategy', () => {
             expect(storeCreditActionCreator.applyStoreCredit).toHaveBeenCalledWith(true);
             expect(await paymentActionCreator.submitPayment).toHaveBeenCalledWith(
                 {
-                    methodId: 'authorizenet',
+                    methodId: 'digitalriver',
                     paymentData: {
-                        nonce: JSON.stringify({
-                            checkoutId: '12345676543',
-                            source: {
-                                source: {
-                                    id: '1',
-                                    reusable: false,
-                                },
-                                readyForStorage: true,
+                        formattedPayload: {
+                            credit_card_token: {
+                                token: JSON.stringify({
+                                    checkoutId: '12345676543',
+                                    source: {
+                                        source: {
+                                            id: '1',
+                                            reusable: false,
+                                        },
+                                        readyForStorage: true,
+                                    },
+                                    sessionId: '1234',
+                                }),
                             },
-                            sessionId: '1234',
-                        }),
+                            vault_payment_instrument: readyForStorage,
+                            set_as_default_stored_instrument: false,
+                        },
                     },
                 }
             );
         });
 
         it('throws an error when payment is not provided', async () => {
-            const error = new Error('Unable to proceed because payload payment argument is not provided.');
+            const error = new PaymentArgumentInvalidError(['payment.paymentData']);
             payload.payment = undefined;
 
             const promise = strategy.execute(payload, undefined);
 
             return expect(promise).rejects.toThrow(error);
+        });
+
+        it('throws an error when digitalRiverCheckoutData is not available', () => {
+            const error = new InvalidArgumentError('Unable to proceed because payload payment argument is not provided.');
+
+            const promise = strategy.execute(payload);
+
+            return expect(promise).rejects.toThrow(error);
+        });
+
+        it('creates the order and submit payment with vaulted instrument', async () => {
+            jest.spyOn(digitalRiverLoadResponse, 'createDropin').mockImplementation(configuration => {
+                onSuccessCallback = configuration.onSuccess;
+
+                return digitalRiverComponent;
+            });
+
+            payload.payment = {
+                methodId: 'digitalriver',
+                paymentData: {
+                    instrumentId: 'token',
+                    shouldSetAsDefaultInstrument: true,
+                },
+            };
+
+            await strategy.initialize(options);
+            onSuccessCallback({
+                source: {
+                    id: '1',
+                    reusable: false,
+                },
+                readyForStorage,
+            });
+            await strategy.execute(payload);
+
+            expect(await strategy.execute(payload)).toEqual(store.getState());
+            expect(orderActionCreator.submitOrder).toHaveBeenCalled();
+            expect(paymentMethodActionCreator.loadPaymentMethod).toHaveBeenCalled();
+            expect(await paymentActionCreator.submitPayment).toHaveBeenCalledWith(
+                {
+                    methodId: 'digitalriver',
+                    paymentData: {
+                        formattedPayload: {
+                            bigpay_token: {
+                                token: 'token',
+                            },
+                            credit_card_token: {
+                                token: JSON.stringify({
+                                    checkoutId: '12345676543',
+                                }),
+                            },
+                        },
+                        set_as_default_stored_instrument: true,
+                    },
+                }
+            );
         });
     });
 
@@ -383,7 +446,43 @@ describe('DigitalRiverPaymentStrategy', () => {
     });
 
     describe('#deinitialize()', () => {
+        const digitalRiverLoadResponse = getDigitalRiverJSMock();
+        const digitalRiverComponent = digitalRiverLoadResponse.createDropin(expect.any(Object));
+        const customer = getCustomer();
+        let options: PaymentInitializeOptions;
+
+        beforeEach(() => {
+            jest.spyOn(store.getState().billingAddress, 'getBillingAddressOrThrow').mockReturnValue(getBillingAddress());
+            jest.spyOn(store.getState().customer, 'getCustomer').mockReturnValue(customer);
+            jest.spyOn(digitalRiverScriptLoader, 'load').mockReturnValue(Promise.resolve(digitalRiverLoadResponse));
+            jest.spyOn(digitalRiverLoadResponse, 'createDropin').mockReturnValue(digitalRiverComponent);
+            jest.spyOn(store.getState().paymentStrategies, 'isInitialized').mockReturnValue(true);
+            options = getInitializeOptionsMock();
+        });
+
+        it('returns Not Initialized Error when intialize options are not available', () => {
+            try {
+                strategy.deinitialize();
+            } catch (error) {
+                expect(error).toStrictEqual(new NotInitializedError(NotInitializedErrorType.PaymentNotInitialized));
+            }
+        });
+
         it('returns the state', async () => {
+            jest.spyOn(document, 'getElementById').mockReturnValue({
+                innerHtml: '',
+            });
+
+            await strategy.initialize(options);
+
+            expect(await strategy.deinitialize()).toEqual(store.getState());
+        });
+
+        it('does not find the container', async () => {
+            jest.spyOn(document, 'getElementById').mockReturnValue(undefined);
+
+            await strategy.initialize(options);
+
             expect(await strategy.deinitialize()).toEqual(store.getState());
         });
     });

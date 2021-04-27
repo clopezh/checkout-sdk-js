@@ -95,11 +95,12 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
         const { shouldSetAsDefaultInstrument = false } = paymentData as HostedInstrument;
         const { isStoreCreditApplied: useStoreCredit } = this._store.getState().checkout.getCheckoutOrThrow();
 
-        if (useStoreCredit !== undefined) {
+        if (useStoreCredit) {
             await this._store.dispatch(this._storeCreditActionCreator.applyStoreCredit(useStoreCredit));
         }
 
         await this._store.dispatch(this._orderActionCreator.submitOrder(order, options));
+
         if (!this._digitalRiverCheckoutData) {
             throw new InvalidArgumentError('Unable to proceed because payload payment argument is not provided.');
         }
@@ -118,7 +119,7 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
                             }),
                         },
                     },
-                    shouldSetAsDefaultInstrument,
+                    set_as_default_stored_instrument: shouldSetAsDefaultInstrument,
                 },
             };
 
