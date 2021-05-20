@@ -3,6 +3,8 @@ import { InvalidArgumentError, MissingDataError, MissingDataErrorType, NotInitia
 import { OrderActionCreator, OrderRequestBody } from '../../../order';
 import { OrderFinalizationNotRequiredError } from '../../../order/errors';
 import { StoreCreditActionCreator } from '../../../store-credit';
+import { PaymentArgumentInvalidError } from '../../errors';
+import { isVaultedInstrument, HostedInstrument } from '../../index';
 import PaymentActionCreator from '../../payment-action-creator';
 import PaymentMethodActionCreator from '../../payment-method-action-creator';
 import { PaymentInitializeOptions, PaymentRequestOptions } from '../../payment-request-options';
@@ -76,8 +78,15 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
     }
 
     async execute(orderRequest: OrderRequestBody, options?: PaymentRequestOptions): Promise<InternalCheckoutSelectors> {
-        const { payment, ...order } = orderRequest;
-        const { isStoreCreditApplied: useStoreCredit } = this._store.getState().checkout.getCheckoutOrThrow();
+        const {payment, ...order} = orderRequest;
+
+        if (!payment || !payment.paymentData) {
+            throw new PaymentArgumentInvalidError(['payment.paymentData']);
+        }
+
+        const { paymentData, methodId } = payment;
+        const { shouldSetAsDefaultInstrument = false } = paymentData as HostedInstrument;
+        const {isStoreCreditApplied: useStoreCredit} = this._store.getState().checkout.getCheckoutOrThrow();
 
         if (useStoreCredit !== undefined) {
             await this._store.dispatch(this._storeCreditActionCreator.applyStoreCredit(useStoreCredit));
@@ -89,18 +98,50 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
             throw new InvalidArgumentError('Unable to proceed because payload payment argument is not provided.');
         }
 
-        const paymentPayload = {
-            methodId: payment.methodId,
-            paymentData: {
-                nonce: JSON.stringify({
-                    checkoutId: this._digitalRiverCheckoutData.checkoutId,
-                    source: this._loadSuccessResponse,
-                    sessionId: this._digitalRiverCheckoutData.sessionId,
-                }),
-            },
-        };
+        if (isVaultedInstrument(paymentData)) {
+            const paymentPayload = {
+                methodId,
+                paymentData: {
+                    formattedPayload: {
+                        bigpay_token: {
+                            token: paymentData.instrumentId,
+                        },
+                        verification_value: '000',
+                        credit_card_token: {
+                            token: JSON.stringify({
+                                checkoutId: this._digitalRiverCheckoutData.checkoutId,
+                            }),
+                        },
+                    },
+                    set_as_default_stored_instrument: shouldSetAsDefaultInstrument,
+                },
+            };
 
-        return await this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
+            return await this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
+        } else {
+            if (!this._loadSuccessResponse) {
+                throw new InvalidArgumentError('Unable to proceed because payload payment argument is not provided.');
+            }
+
+            const paymentPayload = {
+                methodId: payment.methodId,
+                paymentData: {
+                    formattedPayload: {
+                        credit_card_token: {
+                            token: JSON.stringify({
+                                checkoutId: this._digitalRiverCheckoutData.checkoutId,
+                                source: this._loadSuccessResponse,
+                                sessionId: this._digitalRiverCheckoutData.sessionId,
+                            }),
+                        },
+                        vault_payment_instrument: this._loadSuccessResponse.readyForStorage,
+                        set_as_default_stored_instrument: false,
+                    },
+                },
+            };
+
+            return await this._store.dispatch(this._paymentActionCreator.submitPayment(paymentPayload));
+        }
     }
 
     finalize(): Promise<InternalCheckoutSelectors> {
