@@ -223,10 +223,12 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
             throw new MissingDataError(MissingDataErrorType.MissingPaymentMethod);
         }
 
+        const configJs = { ...configuration, showSavePaymentAgreement: Boolean(customer.email) };
+
         this._submitFormEvent = this._getDigitalRiverInitializeOptions().onSubmitForm;
         const digitalRiverConfiguration = {
             sessionId: this._digitalRiverCheckoutData.sessionId,
-            options: { ...configuration },
+            options: { ...configJs },
             billingAddress: {
                 firstName: billing.firstName,
                 lastName: billing.lastName,
