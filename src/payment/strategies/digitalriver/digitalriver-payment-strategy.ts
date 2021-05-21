@@ -74,6 +74,13 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
             this._unsubscribe();
         }
 
+        const { containerId } = this._getDigitalRiverInitializeOptions();
+        const container = document.getElementById(containerId);
+
+        if (container) {
+            container.innerHTML = '';
+        }
+
         return Promise.resolve(this._store.getState());
     }
 
