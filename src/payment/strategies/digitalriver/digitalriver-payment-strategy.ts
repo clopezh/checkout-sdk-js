@@ -94,7 +94,7 @@ export default class DigitalRiverPaymentStrategy implements PaymentStrategy {
 
         await this._store.dispatch(this._orderActionCreator.submitOrder(order, options));
 
-        if (!payment || !this._loadSuccessResponse || !this._digitalRiverCheckoutData) {
+        if (!this._digitalRiverCheckoutData) {
             throw new InvalidArgumentError('Unable to proceed because payload payment argument is not provided.');
         }
 
